@@ -1,1160 +1,430 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>語靈陣線：星際防線 (Cosmic Lingo Frontline)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>語靈陣線 - Lingo Frontline (MVP)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        :root {
-            --bg-deep: #050814;
-            --panel-bg: #0d1224;
-            --neon-cyan: #00f3ff;
-            --neon-pink: #ff0055;
-            --neon-gold: #ffd700;
-            --text-main: #f0f6fc;
-        }
-        body {
-            background-color: var(--bg-deep);
-            color: var(--text-main);
-            font-family: 'Courier New', Courier, monospace;
-            text-align: center;
-            margin: 0;
-            padding: 10px;
-        }
-        header h1 {
-            margin: 5px 0;
-            font-size: 1.6rem;
-            text-shadow: 0 0 10px var(--neon-cyan);
-        }
-        .dashboard {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-            font-weight: bold;
-        }
-        .stat-box {
-            background: var(--panel-bg);
-            border: 1px solid var(--neon-cyan);
-            padding: 5px 12px;
-            border-radius: 4px;
-        }
-        .game-container {
-            position: relative;
-            width: 800px;
-            margin: 0 auto;
-            border: 2px solid var(--neon-cyan);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
-            background: #020408;
-            border-radius: 6px;
-        }
-        canvas {
-            display: block;
-        }
-        .control-panel {
-            width: 800px;
-            margin: 10px auto;
-            background: var(--panel-bg);
-            border: 1px solid var(--neon-gold);
-            padding: 10px;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        .cards-flex {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .card {
-            background: #151d30;
-            border: 2px solid var(--neon-cyan);
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            color: var(--neon-cyan);
-            cursor: pointer;
-            user-select: none;
-        }
-        .card:hover {
-            background: var(--neon-cyan);
-            color: #000;
-        }
-        .card.selected {
-            border-color: var(--neon-gold);
-            background: #3d341f;
-            color: var(--neon-gold);
-        }
-        .action-bar {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            align-items: center;
-        }
-        button.primary-btn {
-            padding: 6px 16px;
-            background: var(--neon-pink);
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        button.primary-btn:hover {
-            background: var(--neon-cyan);
-            color: #000;
-        }
-        select {
-            background: #151d30;
-            color: #fff;
-            border: 1px solid var(--neon-gold);
-            padding: 4px;
-            font-family: inherit;
-        }
-        #combat-log {
-            color: var(--neon-cyan);
-            font-weight: bold;
-            font-size: 0.85rem;
-            margin-top: 4px;
-        }
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
     </style>
 </head>
-<body>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-    <header>
-        <h1>🌌 語靈陣線：星際防線 🌌</h1>
+    <!-- 遊戲標題與狀態列 -->
+    <header class="w-full max-w-4xl flex justify-between items-center mb-4 bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700">
+        <div>
+            <h1 class="text-2xl font-black text-amber-400 tracking-wider">🛡️ 語靈陣線 <span class="text-xs text-slate-400">Lingo Frontline MVP</span></h1>
+            <p class="text-xs text-slate-400">代價平衡系統 × Combo 隨機召喚</p>
+        </div>
+        <div class="flex gap-6 text-sm font-bold">
+            <div class="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">❤️ 生命: <span id="hp-display" class="text-red-400">20</span></div>
+            <div class="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">💰 金幣: <span id="gold-display" class="text-amber-400">150</span></div>
+            <div class="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">⚔️ 波次: <span id="wave-display" class="text-blue-400">1 / 5</span></div>
+        </div>
     </header>
 
-    <div class="dashboard">
-        <div class="stat-box">🛸 基地護盾: <span id="base-hp" style="color:var(--neon-pink);">1000</span>/1000</div>
-        <div class="stat-box">⚡ 能源 MP: <span id="mp-val" style="color:var(--neon-cyan);">10</span>/10</div>
-        <div class="stat-box">🌠 波次: <span id="wave-val" style="color:var(--neon-gold);">Sector 1</span></div>
-    </div>
-
-    <div class="game-container">
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
-    </div>
-
-    <div class="control-panel">
-        <div style="margin-bottom: 6px; font-size: 0.85rem; color: #aaa;">
-            🌐 語系設定：
-            <select id="lang-select" onchange="changeLanguageMode()">
-                <option value="en">English (Cosmic)</option>
-                <option value="ja">日本語 (宇宙)</option>
-                <option value="es">Español (Espacio)</option>
-                <option value="zh">中文 (星際)</option>
-            </select>
+    <!-- 遊戲主畫面與操作面板 -->
+    <main class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-4 gap-4">
+        
+        <!-- 遊戲畫布 (Canvas) -->
+        <div class="md:col-span-3 bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-700 relative flex justify-center items-center">
+            <canvas id="gameCanvas" width="700" height="450" class="bg-slate-950 cursor-crosshair"></canvas>
+            
+            {/* 遊戲未開始或結束的遮罩提示 */}
+            <div id="overlay-screen" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-center p-6">
+                <h2 id="overlay-title" class="text-3xl font-bold mb-2 text-amber-400">準備好迎戰了嗎？</h2>
+                <p id="overlay-desc" class="text-sm text-slate-300 mb-6 max-w-md">體驗「有得必有失」的塔防策略：建造防禦塔、或使用高風險的 Combo 雙牌隨機召喚！</p>
+                <button id="start-btn" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg transition transform hover:scale-105">
+                    開始第一波防守
+                </button>
+            </div>
         </div>
 
-        <div id="combo-display" style="color:var(--neon-gold); font-size:0.85rem; margin-bottom:4px;">🔥 戰術槽: 點擊卡牌進行元素融合</div>
-        <div class="cards-flex" id="hand-container"></div>
+        <!-- 側邊欄：防禦塔建造與代價平衡機制面板 -->
+        <aside class="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 flex flex-col justify-between">
+            <div>
+                <h3 class="text-sm font-bold text-slate-300 mb-3 uppercase tracking-wider border-b border-slate-700 pb-2">防禦與召喚指令</h3>
+                
+                <div class="space-y-3">
+                    <!-- 近戰塔 -->
+                    <button onclick="selectTower('melee')" class="w-full text-left bg-slate-900 hover:bg-slate-700 p-2.5 rounded-lg border border-slate-700 transition flex justify-between items-center group">
+                        <div>
+                            <div class="font-bold text-blue-400 text-sm">⚔️ 語靈騎士 (近戰)</div>
+                            <div class="text-xs text-slate-400">血厚前線阻擋，無遠程</div>
+                        </div>
+                        <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded font-mono">50G</span>
+                    </button>
 
-        <div class="action-bar">
-            <button class="primary-btn" onclick="startVoiceRecognition()">🎙️ 啟動語音詠唱</button>
-            <span id="mic-status" style="font-size: 0.8rem; color: var(--neon-gold);">等待語音指令...</span>
-        </div>
-        <div id="combat-log">系統就緒：點選卡牌並唸出目標單字消滅宇宙怪獸！</div>
-    </div>
+                    <!-- 遠程塔 -->
+                    <button onclick="selectTower('ranged')" class="w-full text-left bg-slate-900 hover:bg-slate-700 p-2.5 rounded-lg border border-slate-700 transition flex justify-between items-center group">
+                        <div>
+                            <div class="font-bold text-purple-400 text-sm">🏹 元素法師 (遠程)</div>
+                            <div class="text-xs text-slate-400">高傷害群攻，血薄易碎</div>
+                        </div>
+                        <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded font-mono">75G</span>
+                    </button>
 
+                    <!-- Combo 隨機召喚機制 -->
+                    <div class="pt-3 border-t border-slate-700">
+                        <div class="font-bold text-amber-400 text-xs mb-1">🎲 Combo 雙牌隨機召喚</div>
+                        <p class="text-xs text-slate-400 mb-2">高數值但兵種隨機，承擔賭博風險！</p>
+                        <button onclick="triggerComboSummon()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold p-2.5 rounded-lg shadow transition text-xs">
+                            發動雙牌 Combo (100G)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-700 text-xs text-slate-400">
+                <span class="text-amber-400 font-bold">提示：</span> 點擊左側地圖上的合法空格來放置防禦塔。
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- 遊戲核心 JavaScript 邏輯 -->
     <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-        let gameState = {
-            baseHp: 1000,
-            mp: 10,
-            wave: 1,
-            currentLang: 'en'
-        };
+        // 遊戲狀態變數
+        let gameState = 'START'; // START, PLAYING, GAMEOVER, WIN
+        let hp = 20;
+        let gold = 150;
+        let wave = 1;
+        let maxWaves = 5;
+        let selectedTowerType = null;
 
-        const vocabDatabases = {
-            en: [
-                { word: "Orbit", meaning: "軌道", element: "water" },
-                { word: "Meteor", meaning: "流星", element: "fire" },
-                { word: "Gravity", meaning: "重力", element: "earth" },
-                { word: "Nebula", meaning: "星雲", element: "light" },
-                { word: "Pulsar", meaning: "脈衝星", element: "thunder" }
-            ],
-            ja: [
-                { word: "Kousei", meaning: "恒星", element: "fire" },
-                { word: "Inryoku", meaning: "引力", element: "earth" },
-                { word: "Wakusei", meaning: "惑星", element: "water" },
-                { word: "Ryūsei", meaning: "流星", element: "thunder" }
-            ],
-            es: [
-                { word: "Galaxia", meaning: "銀河", element: "light" },
-                { word: "Cometa", meaning: "彗星", element: "water" },
-                { word: "Gravedad", meaning: "重力", element: "earth" }
-            ],
-            zh: [
-                { word: "星雲", meaning: "Nebula", element: "light" },
-                { word: "黑洞", meaning: "Black Hole", element: "dark" },
-                { word: "超新星", meaning: "Supernova", element: "fire" }
-            ]
-        };
-
-        let playerHand = [
-            { id: 1, name: "星力·水 (Orbit)", element: "water", cost: 2 },
-            { id: 2, name: "星力·火 (Meteor)", element: "fire", cost: 2 },
-            { id: 3, name: "星力·雷 (Pulsar)", element: "thunder", cost: 3 },
-            { id: 4, name: "星力·地 (Gravity)", element: "earth", cost: 2 }
+        // 道路座標點 (仿王國保衛戰的曲折路線)
+        const path = [
+            {x: 0, y: 150},
+            {x: 180, y: 150},
+            {x: 180, y: 300},
+            {x: 380, y: 300},
+            {x: 380, y: 120},
+            {x: 550, y: 120},
+            {x: 550, y: 350},
+            {x: 700, y: 350}
         ];
 
-        let selectedCards = [];
+        let towers = [];
         let enemies = [];
-        let towers = [
-            { x: 120, y: 80, name: "雷射塔", level: 1 },
-            { x: 120, y: 200, name: "重炮塔", level: 1 },
-            { x: 120, y: 320, name: "冰凍塔", level: 1 }
+        let bullets = [];
+
+        // 塔位格子定義
+        const buildSlots = [
+            {x: 120, y: 90, occupied: false},
+            {x: 240, y: 360, occupied: false},
+            {x: 300, y: 240, occupied: false},
+            {x: 440, y: 180, occupied: false},
+            {x: 480, y: 60, occupied: false},
+            {x: 610, y: 280, occupied: false}
         ];
 
-        function initHand() {
-            const container = document.getElementById("hand-container");
-            if (!container) return;
-            container.innerHTML = "";
-            playerHand.forEach((card) => {
-                let div = document.createElement("div");
-                div.className = "card";
-                div.innerHTML = `<b>${card.name}</b><br><small>MP: ${card.cost}</small>`;
-                div.onclick = () => {
-                    const idx = selectedCards.findIndex(c => c.id === card.id);
-                    if (idx > -1) {
-                        selectedCards.splice(idx, 1);
-                        div.classList.remove("selected");
-                    } else {
-                        if (selectedCards.length < 2) {
-                            selectedCards.push(card);
-                            div.classList.add("selected");
-                        }
-                    }
-                };
-                container.appendChild(div);
-            });
-        }
-
-        function spawnEnemy() {
-            const db = vocabDatabases[gameState.currentLang];
-            if (!db || db.length === 0) return;
-            const rv = db[Math.floor(Math.random() * db.length)];
-            const lanes = [80, 200, 320];
-            const y = lanes[Math.floor(Math.random() * lanes.length)];
-
-            enemies.push({
-                x: 820,
-                y: y,
-                radius: 18,
-                speed: 0.6,
-                targetWord: rv.word,
-                meaning: rv.meaning,
-                hp: 100,
-                maxHp: 100
-            });
-        }
-
-        function changeLanguageMode() {
-            gameState.currentLang = document.getElementById("lang-select").value;
-            enemies.forEach(e => {
-                const db = vocabDatabases[gameState.currentLang];
-                if (db && db.length > 0) {
-                    const rv = db[Math.floor(Math.random() * db.length)];
-                    e.targetWord = rv.word;
-                    e.meaning = rv.meaning;
-                }
-            });
-        }
-
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 1. 繪製精緻的太空戰場背景與格線
-            ctx.fillStyle = "#030712";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 繪製 3 條科技感跑道
-            ctx.strokeStyle = "rgba(0, 243, 255, 0.2)";
-            ctx.lineWidth = 3;
-            for (let i = 1; i <= 3; i++) {
-                ctx.beginPath();
-                ctx.moveTo(0, i * 100);
-                ctx.lineTo(800, i * 100);
-                ctx.stroke();
+        // 敵人物件
+        class Enemy {
+            constructor(waveMultiplier) {
+                this.pathIndex = 0;
+                this.x = path[0].x;
+                this.y = path[0].y;
+                this.speed = 1.2 + waveMultiplier * 0.2;
+                this.maxHealth = 40 + waveMultiplier * 25;
+                this.health = this.maxHealth;
+                this.radius = 12;
             }
 
-            // 2. 繪製我方防禦塔陣地 (像王國保衛戰一樣的基地建築)
-            towers.forEach(t => {
-                ctx.fillStyle = "#1e293b";
-                ctx.strokeStyle = "#00f3ff";
-                ctx.lineWidth = 2;
-                ctx.fillRect(t.x - 20, t.y - 25, 40, 50);
-                ctx.strokeRect(t.x - 20, t.y - 25, 40, 50);
+            update() {
+                const target = path[this.pathIndex + 1];
+                if (!target) return true; // 到達終點
 
-                ctx.fillStyle = "#ffd700";
-                ctx.font = "10px monospace";
-                ctx.fillText(t.name, t.x - 18, t.y - 30);
-            });
+                const dx = target.x - this.x;
+                const dy = target.y - this.y;
+                const dist = Math.hypot(dx, dy);
 
-            // 3. 繪製基地主城
-            ctx.fillStyle = "#00f3ff";
-            ctx.fillRect(20, 20, 20, 360);
-            ctx.fillStyle = "#000";
-            ctx.font = "bold 11px monospace";
-            ctx.fillText("BASE", 12, 205);
+                if (dist < this.speed) {
+                    this.x = target.x;
+                    this.y = target.y;
+                    this.pathIndex++;
+                } else {
+                    this.x += (dx / dist) * this.speed;
+                    this.y += (dy / dist) * this.speed;
+                }
+                return false;
+            }
 
-            // 4. 更新與繪製怪獸
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                let en = enemies[i];
-                en.x -= en.speed;
-
-                // 繪製怪獸身軀
-                ctx.fillStyle = "#ff0055";
+            draw() {
+                ctx.fillStyle = '#ef4444';
                 ctx.beginPath();
-                ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.strokeStyle = "#fff";
+                ctx.strokeStyle = '#991b1b';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-
-                // 繪製怪獸頭頂的單字標籤
-                ctx.fillStyle = "#ffd700";
-                ctx.font = "bold 12px monospace";
-                ctx.fillText(`${en.targetWord} (${en.meaning})`, en.x - 45, en.y - 25);
 
                 // 血條
-                ctx.fillStyle = "#222";
-                ctx.fillRect(en.x - 20, en.y + 22, 40, 5);
-                ctx.fillStyle = "#00ffcc";
-                let w = (en.hp / en.maxHp) * 40;
-                ctx.fillRect(en.x - 20, en.y + 22, Math.max(0, w), 5);
-
-                if (en.x <= 45) {
-                    gameState.baseHp -= 50;
-                    document.getElementById("base-hp").innerText = Math.max(0, gameState.baseHp);
-                    enemies.splice(i, 1);
-                }
+                ctx.fillStyle = '#000';
+                ctx.fillRect(this.x - 15, this.y - 20, 30, 5);
+                ctx.fillStyle = '#22c55e';
+                ctx.fillRect(this.x - 15, this.y - 20, 30 * (this.health / this.maxHealth), 5);
             }
-
-            // 自然回復 MP
-            if (Math.random() < 0.015 && gameState.mp < 10) {
-                gameState.mp++;
-                document.getElementById("mp-val").innerText = gameState.mp;
-            }
-
-            requestAnimationFrame(gameLoop);
         }
 
-        function startVoiceRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("請使用 Google Chrome 瀏覽器！");
-                return;
+        // 防禦塔物件
+        class Tower {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type; // 'melee' 或 'ranged' 或 'combo'
+                this.range = type === 'ranged' ? 140 : 90;
+                this.damage = type === 'ranged' ? 18 : 12;
+                this.cooldown = 0;
+                this.maxCooldown = type === 'ranged' ? 45 : 30;
             }
 
-            const recognition = new SpeechRecognition();
-            recognition.lang = gameState.currentLang === 'ja' ? 'ja-JP' : (gameState.currentLang === 'es' ? 'es-ES' : (gameState.currentLang === 'zh' ? 'zh-TW' : 'en-US'));
-            recognition.start();
+            update() {
+                if (this.cooldown > 0) this.cooldown--;
 
-            document.getElementById("mic-status").innerText = "🔴 聆聽中...";
-
-            recognition.onresult = function(event) {
-                const said = event.results[0][0].transcript.trim();
-                document.getElementById("mic-status").innerText = `🎙️ 唸出: "${said}"`;
-
-                let hit = false;
-                for (let i = enemies.length - 1; i >= 0; i--) {
-                    if (said.toLowerCase().includes(enemies[i].targetWord.toLowerCase()) || enemies[i].targetWord.toLowerCase().includes(said.toLowerCase())) {
-                        enemies[i].hp -= 50;
-                        hit = true;
-                        document.getElementById("combat-log").innerText = `⚡ 擊中 【${enemies[i].targetWord}】！`;
-                        if (enemies[i].hp <= 0) {
-                            enemies.splice(i, 1);
-                        }
+                // 尋找範圍內第一個敵人
+                let target = null;
+                for (let e of enemies) {
+                    if (Math.hypot(e.x - this.x, e.y - this.y) <= this.range) {
+                        target = e;
                         break;
                     }
                 }
-                if (!hit) {
-                    document.getElementById("combat-log").innerText = `❌ 未命中目標`;
+
+                if (target && this.cooldown === 0) {
+                    bullets.push({
+                        x: this.x,
+                        y: this.y,
+                        target: target,
+                        speed: 6,
+                        damage: this.damage
+                    });
+                    this.cooldown = this.maxCooldown;
                 }
-            };
+            }
+
+            draw() {
+                ctx.fillStyle = this.type === 'ranged' ? '#a855f7' : (this.type === 'combo' ? '#f59e0b' : '#3b82f6');
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 18, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.type === 'ranged' ? '法' : (this.type === 'combo' ? '超' : '戰'), this.x, this.y + 4);
+            }
         }
 
-        setTimeout(() => { spawnEnemy(); spawnEnemy(); }, 500);
-        setInterval(() => { if (enemies.length < 4) spawnEnemy(); }, 4000);
+        // 選擇防禦塔類型
+        function selectTower(type) {
+            selectedTowerType = type;
+            alert(`已選擇：${type === 'melee' ? '語靈騎士 (50G)' : '元素法師 (75G)'}，請點擊地圖上的空格放置！`);
+        }
 
-        initHand();
-        gameLoop();
+        // 點擊地圖放置防禦塔
+        canvas.addEventListener('click', (e) => {
+            if (gameState !== 'PLAYING' || !selectedTowerType) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            for (let slot of buildSlots) {
+                if (!slot.occupied && Math.hypot(slot.x - mouseX, slot.y - mouseY) < 25) {
+                    let cost = selectedTowerType === 'ranged' ? 75 : 50;
+                    if (gold >= cost) {
+                        gold -= cost;
+                        towers.push(new Tower(slot.x, slot.y, selectedTowerType));
+                        slot.occupied = true;
+                        selectedTowerType = null;
+                        updateUI();
+                    } else {
+                        alert('金幣不足！');
+                    }
+                    break;
+                }
+            }
+        });
+
+        // Combo 隨機召喚機制
+        function triggerComboSummon() {
+            if (gold < 100) {
+                alert('金幣不足 100G，無法發動 Combo 召喚！');
+                return;
+            }
+            gold -= 100;
+            
+            // 隨機尋找一個空格
+            let emptySlots = buildSlots.filter(s => !s.occupied);
+            if (emptySlots.length === 0) {
+                alert('沒有多餘的塔位可以召喚超級小兵了！');
+                gold += 100;
+                return;
+            }
+
+            let slot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
+            slot.occupied = true;
+            
+            // 隨機抽到強力或奇特的超級兵種（有得必有失的隨機性）
+            let comboTypes = ['combo_giant', 'combo_sniper', 'combo_berserker'];
+            let chosenType = comboTypes[Math.floor(Math.random() * comboTypes.length)];
+            
+            towers.push(new Tower(slot.x, slot.y, 'combo'));
+            updateUI();
+            alert('🎲 Combo 雙牌連線成功！隨機召喚出強力超級語靈！');
+        }
+
+        function updateUI() {
+            document.getElementById('hp-display').innerText = hp;
+            document.getElementById('gold-display').innerText = gold;
+            document.getElementById('wave-display').innerText = `${wave} / ${maxWaves}`;
+        }
+
+        // 遊戲主迴圈
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. 繪製地圖路線
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 32;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(path[0].x, path[0].y);
+            for (let p of path) ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+
+            // 2. 繪製防禦塔空格
+            for (let slot of buildSlots) {
+                ctx.fillStyle = slot.occupied ? '#1e293b' : '#334155';
+                ctx.beginPath();
+                ctx.arc(slot.x, slot.y, 18, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = slot.occupied ? '#475569' : '#64748b';
+                ctx.stroke();
+            }
+
+            // 3. 更新與繪製敵人
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let reachedEnd = enemies[i].update();
+                if (reachedEnd) {
+                    enemies.splice(i, 1);
+                    hp--;
+                    updateUI();
+                    if (hp <= 0) {
+                        endGame(false);
+                    }
+                } else {
+                    enemies[i].draw();
+                }
+            }
+
+            // 4. 更新與繪製防禦塔
+            for (let t of towers) {
+                t.update();
+                t.draw();
+            }
+
+            // 5. 更新與繪製子彈
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                let dx = b.target.x - b.x;
+                let dy = b.target.y - b.y;
+                let dist = Math.hypot(dx, dy);
+
+                if (dist < b.speed || !enemies.includes(b.target)) {
+                    if (enemies.includes(b.target)) {
+                        b.target.health -= b.damage;
+                        if (b.target.health <= 0) {
+                            let index = enemies.indexOf(b.target);
+                            if (index > -1) {
+                                enemies.splice(index, 1);
+                                gold += 25; // 擊殺獎勵
+                                updateUI();
+                            }
+                        }
+                    }
+                    bullets.splice(i, 1);
+                } else {
+                    b.x += (dx / dist) * b.speed;
+                    b.y += (dy / dist) * b.speed;
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // 檢查波次是否清空
+            if (gameState === 'PLAYING' && enemies.length === 0) {
+                if (wave < maxWaves) {
+                    wave++;
+                    gold += 50; // 波次獎勵
+                    updateUI();
+                    startWave();
+                } else {
+                    endGame(true);
+                }
+            }
+
+            if (gameState === 'PLAYING') {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function startWave() {
+            let enemyCount = 3 + wave * 2;
+            let spawned = 0;
+            let interval = setInterval(() => {
+                if (spawned < enemyCount && gameState === 'PLAYING') {
+                    enemies.push(new Enemy(wave));
+                    spawned++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 1200);
+        }
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            document.getElementById('overlay-screen').classList.add('hidden');
+            gameState = 'PLAYING';
+            hp = 20;
+            gold = 150;
+            wave = 1;
+            towers = [];
+            enemies = [];
+            bullets = [];
+            // 重置塔位
+            buildSlots.forEach(s => s.occupied = false);
+            updateUI();
+            startWave();
+            gameLoop();
+        });
+
+        function endGame(isWin) {
+            gameState = isWin ? 'WIN' : 'GAMEOVER';
+            const overlay = document.getElementById('overlay-screen');
+            const title = document.getElementById('overlay-title');
+            const desc = document.getElementById('overlay-desc');
+            const btn = document.getElementById('start-btn');
+
+            overlay.classList.remove('hidden');
+            if (isWin) {
+                title.innerText = "🎉 勝利！語靈防線守住了！";
+                desc.innerText = "你成功抵禦了所有怪獸的進攻，展現了極佳的塔防與代價平衡策略！";
+            } else {
+                title.innerText = "💀 防線崩潰...";
+                desc.innerText = "怪獸突破了你的語靈陣線，再試一次，調整你的英雄與 Combo 策略吧！";
+            }
+            btn.innerText = "重新挑戰";
+        }
     </script>
 </body>
 </html>
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <title>語靈陣線：星際防線 (Cosmic Lingo Frontline)</title>
-    <style>
-        :root {
-            --bg-deep: #050814;
-            --panel-bg: #0d1224;
-            --neon-cyan: #00f3ff;
-            --neon-pink: #ff0055;
-            --neon-gold: #ffd700;
-            --text-main: #f0f6fc;
-        }
-        body {
-            background-color: var(--bg-deep);
-            color: var(--text-main);
-            font-family: 'Courier New', Courier, monospace;
-            text-align: center;
-            margin: 0;
-            padding: 10px;
-            user-select: none;
-        }
-        header h1 {
-            margin: 5px 0;
-            font-size: 1.6rem;
-            text-shadow: 0 0 10px var(--neon-cyan);
-        }
-        .dashboard {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-            font-weight: bold;
-        }
-        .stat-box {
-            background: var(--panel-bg);
-            border: 1px solid var(--neon-cyan);
-            padding: 5px 12px;
-            border-radius: 4px;
-        }
-        .game-container {
-            position: relative;
-            width: 800px;
-            margin: 0 auto;
-            border: 2px solid var(--neon-cyan);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
-            background: #020408;
-            border-radius: 6px;
-        }
-        canvas {
-            display: block;
-            cursor: crosshair;
-        }
-        .control-panel {
-            width: 800px;
-            margin: 10px auto;
-            background: var(--panel-bg);
-            border: 1px solid var(--neon-gold);
-            padding: 10px;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        .cards-flex {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .card {
-            background: #151d30;
-            border: 2px solid var(--neon-cyan);
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            color: var(--neon-cyan);
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .card:hover {
-            background: var(--neon-cyan);
-            color: #000;
-            transform: translateY(-3px);
-        }
-        .card.selected {
-            border-color: var(--neon-gold);
-            background: #3d341f;
-            color: var(--neon-gold);
-        }
-        .action-bar {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            align-items: center;
-        }
-        button.primary-btn {
-            padding: 6px 16px;
-            background: var(--neon-pink);
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        button.primary-btn:hover {
-            background: var(--neon-cyan);
-            color: #000;
-        }
-        select {
-            background: #151d30;
-            color: #fff;
-            border: 1px solid var(--neon-gold);
-            padding: 4px;
-            font-family: inherit;
-        }
-        #combat-log {
-            color: var(--neon-cyan);
-            font-weight: bold;
-            font-size: 0.85rem;
-            margin-top: 4px;
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <h1>🌌 語靈陣線：星際防線 🌌</h1>
-    </header>
-
-    <div class="dashboard">
-        <div class="stat-box">🛸 基地護盾: <span id="base-hp" style="color:var(--neon-pink);">1000</span>/1000</div>
-        <div class="stat-box">⚡ 能源 MP: <span id="mp-val" style="color:var(--neon-cyan);">10</span>/10</div>
-        <div class="stat-box">🌠 當前波次: <span id="wave-val" style="color:var(--neon-gold);">Sector 1</span></div>
-        <div class="stat-box">🎯 擊殺數: <span id="kill-val" style="color:#00ffcc;">0</span>/5</div>
-    </div>
-
-    <div class="game-container">
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
-    </div>
-
-    <div class="control-panel">
-        <div style="margin-bottom: 6px; font-size: 0.85rem; color: #aaa;">
-            🌐 語系設定：
-            <select id="lang-select" onchange="changeLanguageMode()">
-                <option value="en">English (Cosmic)</option>
-                <option value="ja">日本語 (宇宙)</option>
-                <option value="es">Español (Espacio)</option>
-                <option value="zh">中文 (星際)</option>
-            </select>
-        </div>
-
-        <div id="combo-display" style="color:var(--neon-gold); font-size:0.85rem; margin-bottom:4px;">🔥 點選手牌選取，或直接「點擊手牌再點擊畫布」部署防禦能量！</div>
-        <div class="cards-flex" id="hand-container"></div>
-
-        <div class="action-bar">
-            <button class="primary-btn" onclick="startVoiceRecognition()">🎙️ 啟動語音詠唱</button>
-            <span id="mic-status" style="font-size: 0.8rem; color: var(--neon-gold);">等待語音指令...</span>
-        </div>
-        <div id="combat-log">系統就緒：防禦塔會自動雷射開火！每擊殺 5 隻怪獸自動晉級下一 Sector！</div>
-    </div>
-
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-
-        let gameState = {
-            baseHp: 1000,
-            mp: 10,
-            wave: 1,
-            kills: 0,
-            currentLang: 'en'
-        };
-
-        const vocabDatabases = {
-            en: [
-                { word: "Orbit", meaning: "軌道", element: "water" },
-                { word: "Meteor", meaning: "流星", element: "fire" },
-                { word: "Gravity", meaning: "重力", element: "earth" },
-                { word: "Nebula", meaning: "星雲", element: "light" },
-                { word: "Pulsar", meaning: "脈衝星", element: "thunder" }
-            ],
-            ja: [
-                { word: "Kousei", meaning: "恒星", element: "fire" },
-                { word: "Inryoku", meaning: "引力", element: "earth" },
-                { word: "Wakusei", meaning: "惑星", element: "water" },
-                { word: "Ryūsei", meaning: "流星", element: "thunder" }
-            ],
-            es: [
-                { word: "Galaxia", meaning: "銀河", element: "light" },
-                { word: "Cometa", meaning: "彗星", element: "water" },
-                { word: "Gravedad", meaning: "重力", element: "earth" }
-            ],
-            zh: [
-                { word: "星雲", meaning: "Nebula", element: "light" },
-                { word: "黑洞", meaning: "Black Hole", element: "dark" },
-                { word: "超新星", meaning: "Supernova", element: "fire" }
-            ]
-        };
-
-        let playerHand = [
-            { id: 1, name: "星力·水 (Orbit)", element: "water", cost: 2 },
-            { id: 2, name: "星力·火 (Meteor)", element: "fire", cost: 2 },
-            { id: 3, name: "星力·雷 (Pulsar)", element: "thunder", cost: 3 },
-            { id: 4, name: "星力·地 (Gravity)", element: "earth", cost: 2 }
-        ];
-
-        let selectedCards = [];
-        let activeCardForDeploy = null; // 用於點擊手牌後點擊畫布部署
-        let enemies = [];
-        let effects = []; // 雷射光束與爆炸特效
-
-        // 防禦塔陣地
-        let towers = [
-            { x: 120, y: 80, name: "雷射塔", range: 250, damage: 1.5, coolDown: 0, maxCd: 30 },
-            { x: 120, y: 200, name: "重炮塔", range: 300, damage: 3.0, coolDown: 0, maxCd: 60 },
-            { x: 120, y: 320, name: "冰凍塔", range: 220, damage: 1.0, coolDown: 0, maxCd: 45 }
-        ];
-
-        function initHand() {
-            const container = document.getElementById("hand-container");
-            if (!container) return;
-            container.innerHTML = "";
-            playerHand.forEach((card) => {
-                let div = document.createElement("div");
-                div.className = "card";
-                if (activeCardForDeploy && activeCardForDeploy.id === card.id) {
-                    div.classList.add("selected");
-                }
-                div.innerHTML = `<b>${card.name}</b><br><small>MP: ${card.cost}</small>`;
-                div.onclick = () => {
-                    // 點擊手牌代表選中準備部署到畫布
-                    activeCardForDeploy = card;
-                    document.getElementById("combat-log").innerText = `🎯 已選定【${card.name}】，請點擊畫布任意跑道進行部署！`;
-                    initHand();
-                };
-                container.appendChild(div);
-            });
-        }
-
-        // 畫布點擊事件：實現點擊手牌後點擊畫布部署攻擊/能量陣
-        canvas.onclick = function(event) {
-            if (!activeCardForDeploy) return;
-            const rect = canvas.getBoundingClientRect();
-            const clickX = event.clientX - rect.left;
-            const clickY = event.clientY - rect.top;
-
-            if (gameState.mp >= activeCardForDeploy.cost) {
-                gameState.mp -= activeCardForDeploy.cost;
-                document.getElementById("mp-val").innerText = gameState.mp;
-
-                // 在點擊位置產生一個能量轟炸特效
-                effects.push({ type: 'blast', x: clickX, y: clickY, radius: 10, maxRadius: 50, life: 20 });
-
-                // 對點擊附近的怪獸造成傷害
-                enemies.forEach(en => {
-                    let dist = Math.hypot(en.x - clickX, en.y - clickY);
-                    if (dist < 60) {
-                        en.hp -= 60;
-                        document.getElementById("combat-log").innerText = `💥 戰術部署命中【${en.targetWord}】！造成 60 點傷害！`;
-                    }
-                });
-
-                activeCardForDeploy = null;
-                initHand();
-            } else {
-                document.getElementById("combat-log").innerText = `⚠️ 能源 MP 不足，無法部署！`;
-                activeCardForDeploy = null;
-                initHand();
-            }
-        };
-
-        function spawnEnemy() {
-            const db = vocabDatabases[gameState.currentLang];
-            if (!db || db.length === 0) return;
-            const rv = db[Math.floor(Math.random() * db.length)];
-            const lanes = [80, 200, 320];
-            const y = lanes[Math.floor(Math.random() * lanes.length)];
-
-            enemies.push({
-                x: 820,
-                y: y,
-                radius: 18,
-                speed: 0.5 + (gameState.wave * 0.1),
-                targetWord: rv.word,
-                meaning: rv.meaning,
-                hp: 100 + (gameState.wave * 20),
-                maxHp: 100 + (gameState.wave * 20)
-            });
-        }
-
-        function changeLanguageMode() {
-            gameState.currentLang = document.getElementById("lang-select").value;
-            enemies.forEach(e => {
-                const db = vocabDatabases[gameState.currentLang];
-                if (db && db.length > 0) {
-                    const rv = db[Math.floor(Math.random() * db.length)];
-                    e.targetWord = rv.word;
-                    e.meaning = rv.meaning;
-                }
-            });
-        }
-
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 1. 繪製太空戰場與跑道
-            ctx.fillStyle = "#030712";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.strokeStyle = "rgba(0, 243, 255, 0.2)";
-            ctx.lineWidth = 3;
-            for (let i = 1; i <= 3; i++) {
-                ctx.beginPath();
-                ctx.moveTo(0, i * 100);
-                ctx.lineTo(800, i * 100);
-                ctx.stroke();
-            }
-
-            // 2. 基地主城
-            ctx.fillStyle = "#00f3ff";
-            ctx.fillRect(20, 20, 20, 360);
-            ctx.fillStyle = "#000";
-            ctx.font = "bold 11px monospace";
-            ctx.fillText("BASE", 12, 205);
-
-            // 3. 防禦塔自動攻擊邏輯與繪製
-            towers.forEach(t => {
-                ctx.fillStyle = "#1e293b";
-                ctx.strokeStyle = "#00f3ff";
-                ctx.lineWidth = 2;
-                ctx.fillRect(t.x - 20, t.y - 25, 40, 50);
-                ctx.strokeRect(t.x - 20, t.y - 25, 40, 50);
-
-                ctx.fillStyle = "#ffd700";
-                ctx.font = "10px monospace";
-                ctx.fillText(t.name, t.x - 18, t.y - 30);
-
-                // 塔的冷卻與攻擊
-                if (t.coolDown > 0) t.coolDown--;
-                
-                // 尋找射程內的最近怪獸
-                let target = null;
-                let minDist = t.range;
-                enemies.forEach(en => {
-                    let d = Math.hypot(en.
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <title>語靈陣線：宇宙星際防線 (Cosmic Lingo Frontline)</title>
-    <style>
-        :root {
-            --bg-deep: #050814;
-            --panel-bg: #0d1224;
-            --neon-cyan: #00f3ff;
-            --neon-pink: #ff0055;
-            --neon-gold: #ffd700;
-            --text-main: #f0f6fc;
-        }
-        body {
-            background-color: var(--bg-deep);
-            color: var(--text-main);
-            font-family: 'Courier New', Courier, monospace;
-            text-align: center;
-            margin: 0;
-            padding: 10px;
-            user-select: none;
-        }
-        header h1 {
-            margin: 5px 0;
-            font-size: 1.6rem;
-            text-shadow: 0 0 10px var(--neon-cyan);
-        }
-        .dashboard {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-            font-weight: bold;
-        }
-        .stat-box {
-            background: var(--panel-bg);
-            border: 1px solid var(--neon-cyan);
-            padding: 5px 12px;
-            border-radius: 4px;
-        }
-        .game-container {
-            position: relative;
-            width: 800px;
-            margin: 0 auto;
-            border: 2px solid var(--neon-cyan);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
-            background: #020408;
-            border-radius: 6px;
-        }
-        canvas {
-            display: block;
-            cursor: crosshair;
-        }
-        .control-panel {
-            width: 800px;
-            margin: 10px auto;
-            background: var(--panel-bg);
-            border: 1px solid var(--neon-gold);
-            padding: 10px;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        .cards-flex {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .card {
-            background: #151d30;
-            border: 2px solid var(--neon-cyan);
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            color: var(--neon-cyan);
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .card:hover {
-            background: var(--neon-cyan);
-            color: #000;
-            transform: translateY(-3px);
-        }
-        .card.selected {
-            border-color: var(--neon-gold);
-            background: #3d341f;
-            color: var(--neon-gold);
-        }
-        .action-bar {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            align-items: center;
-        }
-        button.primary-btn {
-            padding: 6px 16px;
-            background: var(--neon-pink);
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        button.primary-btn:hover {
-            background: var(--neon-cyan);
-            color: #000;
-        }
-        select {
-            background: #151d30;
-            color: #fff;
-            border: 1px solid var(--neon-gold);
-            padding: 4px;
-            font-family: inherit;
-        }
-        #combat-log {
-            color: var(--neon-cyan);
-            font-weight: bold;
-            font-size: 0.85rem;
-            margin-top: 4px;
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <h1>🌌 語靈陣線：宇宙防線 🌌</h1>
-    </header>
-
-    <div class="dashboard">
-        <div class="stat-box">🛸 基地護盾: <span id="base-hp" style="color:var(--neon-pink);">1000</span>/1000</div>
-        <div class="stat-box">⚡ 能源 MP: <span id="mp-val" style="color:var(--neon-cyan);">10</span>/10</div>
-        <div class="stat-box">🌠 當前波次: <span id="wave-val" style="color:var(--neon-gold);">Sector 1</span></div>
-        <div class="stat-box">🎯 擊殺數: <span id="kill-val" style="color:#00ffcc;">0</span>/5</div>
-    </div>
-
-    <div class="game-container">
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
-    </div>
-
-    <div class="control-panel">
-        <div style="margin-bottom: 6px; font-size: 0.85rem; color: #aaa;">
-            🌐 語系設定：
-            <select id="lang-select" onchange="changeLanguageMode()">
-                <option value="en">English (Cosmic)</option>
-                <option value="ja">日本語 (宇宙)</option>
-                <option value="es">Español (Espacio)</option>
-                <option value="zh">中文 (星際)</option>
-            </select>
-        </div>
-
-        <div id="combo-display" style="color:var(--neon-gold); font-size:0.85rem; margin-bottom:4px;">🔥 點選手牌選取，或點擊手牌再點擊畫布部署戰術打擊！</div>
-        <div class="cards-flex" id="hand-container"></div>
-
-        <div class="action-bar">
-            <button class="primary-btn" onclick="startVoiceRecognition()">🎙️ 啟動語音詠唱</button>
-            <span id="mic-status" style="font-size: 0.8rem; color: var(--neon-gold);">等待語音指令...</span>
-        </div>
-        <div id="combat-log">系統就緒：準備載入 AI 精靈圖動畫引擎！</div>
-    </div>
-
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-
-        let gameState = {
-            baseHp: 1000,
-            mp: 10,
-            wave: 1,
-            kills: 0,
-            currentLang: 'en'
-        };
-
-        const vocabDatabases = {
-            en: [
-                { word: "Orbit", meaning: "軌道" },
-                { word: "Meteor", meaning: "流星" },
-                { word: "Gravity", meaning: "重力" },
-                { word: "Nebula", meaning: "星雲" },
-                { word: "Pulsar", meaning: "脈衝星" }
-            ],
-            ja: [
-                { word: "Kousei", meaning: "恒星" },
-                { word: "Inryoku", meaning: "引力" },
-                { word: "Wakusei", meaning: "惑星" },
-                { word: "Ryūsei", meaning: "流星" }
-            ],
-            es: [
-                { word: "Galaxia", meaning: "銀河" },
-                { word: "Cometa", meaning: "彗星" },
-                { word: "Gravedad", meaning: "重力" }
-            ],
-            zh: [
-                { word: "星雲", meaning: "Nebula" },
-                { word: "黑洞", meaning: "Black Hole" },
-                { word: "超新星", meaning: "Supernova" }
-            ]
-        };
-
-        // 預留給 AI 動畫圖片的物件
-        const monsterSprite = new Image();
-        // 當你有 AI 生成的圖片時，把路徑填在下面（例如 'assets/monster_walk.png'）
-        // 如果還沒有圖片，系統會自動使用內建的動態向量怪獸代替，完全不影響遊玩！
-        let useSpriteImage = false; 
-        monsterSprite.src = 'assets/monster_walk.png'; 
-        monsterSprite.onload = () => { useSpriteImage = true; };
-
-        let playerHand = [
-            { id: 1, name: "星力·水 (Orbit)", cost: 2 },
-            { id: 2, name: "星力·火 (Meteor)", cost: 2 },
-            { id: 3, name: "星力·雷 (Pulsar)", cost: 3 },
-            { id: 4, name: "星力·地 (Gravity)", cost: 2 }
-        ];
-
-        let activeCardForDeploy = null;
-        let enemies = [];
-        let effects = [];
-        let frameIndex = 0; // 序列圖動畫當前格數
-        let frameTimer = 0;
-
-        let towers = [
-            { x: 120, y: 80, name: "雷射塔", range: 250, damage: 1.5, coolDown: 0, maxCd: 30 },
-            { x: 120, y: 200, name: "重炮塔", range: 300, damage: 3.0, coolDown: 0, maxCd: 60 },
-            { x: 120, y: 320, name: "冰凍塔", range: 220, damage: 1.0, coolDown: 0, maxCd: 45 }
-        ];
-
-        function initHand() {
-            const container = document.getElementById("hand-container");
-            if (!container) return;
-            container.innerHTML = "";
-            playerHand.forEach((card) => {
-                let div = document.createElement("div");
-                div.className = "card";
-                if (activeCardForDeploy && activeCardForDeploy.id === card.id) {
-                    div.classList.add("selected");
-                }
-                div.innerHTML = `<b>${card.name}</b><br><small>MP: ${card.cost}</small>`;
-                div.onclick = () => {
-                    activeCardForDeploy = card;
-                    document.getElementById("combat-log").innerText = `🎯 已選定【${card.name}】，請點擊畫布部署！`;
-                    initHand();
-                };
-                container.appendChild(div);
-            });
-        }
-
-        canvas.onclick = function(event) {
-            if (!activeCardForDeploy) return;
-            const rect = canvas.getBoundingClientRect();
-            const clickX = event.clientX - rect.left;
-            const clickY = event.clientY - rect.top;
-
-            if (gameState.mp >= activeCardForDeploy.cost) {
-                gameState.mp -= activeCardForDeploy.cost;
-                document.getElementById("mp-val").innerText = gameState.mp;
-
-                effects.push({ type: 'blast', x: clickX, y: clickY, radius: 10, maxRadius: 50, life: 20 });
-
-                enemies.forEach(en => {
-                    let dist = Math.hypot(en.x - clickX, en.y - clickY);
-                    if (dist < 60) {
-                        en.hp -= 60;
-                        document.getElementById("combat-log").innerText = `💥 戰術打擊命中【${en.targetWord}】！`;
-                    }
-                });
-
-                activeCardForDeploy = null;
-                initHand();
-            } else {
-                document.getElementById("combat-log").innerText = `⚠️ 能源 MP 不足！`;
-                activeCardForDeploy = null;
-                initHand();
-            }
-        };
-
-        function spawnEnemy() {
-            const db = vocabDatabases[gameState.currentLang];
-            if (!db || db.length === 0) return;
-            const rv = db[Math.floor(Math.random() * db.length)];
-            const lanes = [80, 200, 320];
-            const y = lanes[Math.floor(Math.random() * lanes.length)];
-
-            enemies.push({
-                x: 820,
-                y: y,
-                width: 45,
-                height: 45,
-                speed: 0.5 + (gameState.wave * 0.08),
-                targetWord: rv.word,
-                meaning: rv.meaning,
-                hp: 100 + (gameState.wave * 15),
-                maxHp: 100 + (gameState.wave * 15)
-            });
-        }
-
-        function changeLanguageMode() {
-            gameState.currentLang = document.getElementById("lang-select").value;
-            enemies.forEach(e => {
-                const db = vocabDatabases[gameState.currentLang];
-                if (db && db.length > 0) {
-                    const rv = db[Math.floor(Math.random() * db.length)];
-                    e.targetWord = rv.word;
-                    e.meaning = rv.meaning;
-                }
-            });
-        }
-
-        function gameLoop() {
-            // 動畫格數更新控制
-            frameTimer++;
-            if (frameTimer % 10 === 0) {
-                frameIndex = (frameIndex + 1) % 4; // 假設 AI 圖片有 4 格連續動作
-            }
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 1. 太空背景與跑道
-            ctx.fillStyle = "#030712";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.strokeStyle = "rgba(0, 243, 255, 0.2)";
-            ctx.lineWidth = 3;
-            for (let i = 1; i <= 3; i++) {
-                ctx.beginPath();
-                ctx.moveTo(0, i * 100);
-                ctx.lineTo(800, i * 100);
-                ctx.stroke();
-            }
-
-            // 2. 基地主城
-            ctx.fillStyle = "#00f3ff";
-            ctx.fillRect(20, 20, 20, 360);
-            ctx.fillStyle = "#000";
-            ctx.font = "bold 11px monospace";
-            ctx.fillText("BASE", 12, 205);
-
-            // 3. 防禦塔自動攻擊
-            towers.forEach(t => {
-                ctx.fillStyle = "#1e293b";
-                ctx.strokeStyle = "#00f3ff";
-                ctx.lineWidth = 2;
-                ctx.fillRect(t.x - 20, t.y - 25, 40, 50);
-                ctx.strokeRect(t.x - 20, t.y - 25, 40, 50);
-
-                ctx.fillStyle = "#ffd700";
-                ctx.font = "10px monospace";
-                ctx.fillText(t.name, t.x - 18, t.y - 30);
-
-                if (t.coolDown > 0) t.coolDown--;
-                
-                let target = null;
-                let minDist = t.range;
-                enemies.forEach(en => {
-                    let d = Math.hypot(en.x - t.x, en.y - t.y);
-                    if (d < minDist) {
-                        minDist = d;
-                        target = en;
-                    }
-                });
-
-                if (target && t.coolDown === 0) {
-                    target.hp -= t.damage * 12;
-                    t.coolDown = t.maxCd;
-                    effects.push({ type: 'laser', x1: t.x, y1: t.y, x2: target.x, y2: target.y, color: '#00ffcc', life: 5 });
-                }
-            });
-
-            // 4. 特效渲染
-            for (let i = effects.length - 1; i >= 0; i--) {
-                let ef = effects[i];
-                if (ef.type === 'laser') {
-                    ctx.strokeStyle = ef.color;
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(ef.x1, ef.y1);
-                    ctx.lineTo(ef.x2, ef.y2);
-                    ctx.stroke();
-                } else if (ef.type === 'blast') {
-                    ctx.strokeStyle = '#ffd700';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.arc(ef.x, ef.y, ef.radius, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ef.radius += 2;
-                }
-                ef.life--;
-                if (ef.life <= 0) effects.splice(i, 1);
-            }
-
-            // 5. 更新與繪製宇宙怪獸（支援 AI 序列圖動畫引擎）
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                let en = enemies[i];
-                en.x -= en.speed;
-
-                if (useSpriteImage) {
-                    // 若有上傳 AI 圖片，自動切換序列圖影格播放走路動畫
-                    let sWidth = monsterSprite.width / 4; // 假設 4 格
-                    let sHeight = monsterSprite.height;
-                    ctx.drawImage(monsterSprite, frameIndex * sWidth, 0, sWidth, sHeight, en.x - 25, en.y - 25, en.width, en.height);
-                } else {
-                    // 預設高質感科幻動態幾何怪獸
-                    ctx.fillStyle = '#ff0055';
-                    ctx.beginPath();
-                    ctx.arc(en.x, en.y, 20 + Math.sin(frameTimer * 0.2) * 2, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = "#00f3ff";
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
-
-                // 繪製怪獸頭頂單字
-                ctx.fillStyle = "#ffd700";
-                ctx.font = "bold 12px monospace";
-                ctx.fillText(`${en.targetWord} (${en.meaning})`, en.x - 45, en.y - 32);
-
-                // 血條
-                ctx.fillStyle = "#222";
-                ctx.fillRect(en.x - 20, en.y + 24, 40, 5);
-                ctx.fillStyle = "#00ffcc";
-                let w = (en.hp / en.maxHp) * 40;
-                ctx.fillRect(en.x - 20, en.y + 24, Math.max(0, w), 5);
-
-                // 擊殺判定
-                if (en.hp <= 0) {
-                    enemies.splice(i,
-                            
