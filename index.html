@@ -374,3 +374,429 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>語靈陣線 Lingo Frontline - Combo MVP</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(18, 24, 38, 0.9);
+            --neon-cyan: #00ffcc;
+            --neon-pink: #ff0055;
+            --neon-gold: #ffcc00;
+            --neon-purple: #9d00ff;
+            --text-main: #f0f6fc;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+        header h1 {
+            margin: 5px 0;
+            font-size: 1.8rem;
+            text-shadow: 0 0 10px var(--neon-cyan);
+            letter-spacing: 2px;
+        }
+        .dashboard {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .stat-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-cyan);
+            padding: 5px 15px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+        }
+        .game-container {
+            position: relative;
+            width: 800px;
+            margin: 0 auto;
+            border: 2px solid var(--neon-pink);
+            box-shadow: 0 0 25px rgba(255, 0, 85, 0.4);
+            background: #111520;
+        }
+        canvas {
+            display: block;
+            background: radial-gradient(circle, #1a2236 0%, #0b0f19 100%);
+        }
+        .control-panel {
+            width: 800px;
+            margin: 10px auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-gold);
+            padding: 12px;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .cards-flex {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .card {
+            background: #1f293d;
+            border: 2px solid var(--neon-cyan);
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: var(--neon-cyan);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .card:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-cyan);
+            transform: translateY(-3px);
+        }
+        .card.selected {
+            border-color: var(--neon-gold);
+            background: #3d341f;
+            color: var(--neon-gold);
+            box-shadow: 0 0 15px var(--neon-gold);
+        }
+        .action-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            align-items: center;
+            margin-top: 8px;
+        }
+        button.primary-btn {
+            padding: 8px 20px;
+            background: var(--neon-pink);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+            transition: 0.2s;
+        }
+        button.primary-btn:hover {
+            background: var(--neon-cyan);
+            color: #000;
+        }
+        select {
+            background: #1f293d;
+            color: #fff;
+            border: 1px solid var(--neon-gold);
+            padding: 6px;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        #combo-display {
+            color: var(--neon-gold);
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+        #combat-log {
+            color: var(--neon-cyan);
+            font-weight: bold;
+            height: 22px;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>《語靈陣線》LINGO FRONTLINE</h1>
+    </header>
+
+    <div class="dashboard">
+        <div class="stat-box">🏰 主城防禦: <span id="base-hp" style="color:var(--neon-pink);">100</span>/100</div>
+        <div class="stat-box">⚡ 戰術 MP: <span id="mp-val" style="color:var(--neon-cyan);">10</span>/10</div>
+        <div class="stat-box">🌊 戰鬥波次: <span id="wave-val" style="color:var(--neon-gold);">Wave 1</span></div>
+    </div>
+
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+    </div>
+
+    <div class="control-panel">
+        <div style="margin-bottom: 8px; font-size: 0.85rem; color: #aaa;">
+            🌍 語言學習模式設定：
+            <select id="lang-select" onchange="changeLanguageMode()">
+                <option value="en">英語 (English - Advanced Tactic)</option>
+                <option value="ja">日本語 (Japanese - JLPT N3/N2)</option>
+                <option value="es">Español (Spanish - Phonetic)</option>
+            </select>
+        </div>
+
+        <div id="combo-display">🔥 雙卡 Combo 槽位: 請點擊兩張手牌進行屬性融合 (已選 0/2)</div>
+        <div class="cards-flex" id="hand-container"></div>
+
+        <div class="action-bar">
+            <button class="primary-btn" onclick="startVoiceRecognition()">🎙️ 啟動戰術語音吟詠</button>
+            <span id="mic-status" style="font-size: 0.85rem; color: var(--neon-gold);">等待語音指令...</span>
+        </div>
+        <div id="combat-log">系統就緒：選定 2 張元素卡牌並大聲唸出敵方目標單字即可發動 Combo 攻擊！</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let gameState = {
+            baseHp: 100,
+            mp: 10,
+            maxMp: 10,
+            wave: 1,
+            currentLang: 'en'
+        };
+
+        const vocabDatabases = {
+            en: [
+                { word: "Frost", meaning: "冰霜", type: "ice" },
+                { word: "Ignite", meaning: "點燃", type: "fire" },
+                { word: "Thunder", meaning: "雷霆", type: "thunder" },
+                { word: "Shadow", meaning: "暗影", type: "dark" }
+            ],
+            ja: [
+                { word: "Kōri", meaning: "氷 (冰)", type: "ice" },
+                { word: "Honō", meaning: "炎 (火)", type: "fire" },
+                { word: "Inazuma", meaning: "稲妻 (雷)", type: "thunder" },
+                { word: "Kage", meaning: "影 (暗)", type: "dark" }
+            ],
+            es: [
+                { word: "Fuego", meaning: "火", type: "fire" },
+                { word: "Hielo", meaning: "冰", type: "ice" },
+                { word: "Rayo", meaning: "雷", type: "thunder" },
+                { word: "Sombra", meaning: "影", type: "dark" }
+            ]
+        };
+
+        // 玩家手牌 (水、火、雷、風)
+        let playerHand = [
+            { id: 1, name: "元素·水 (Water)", element: "water", cost: 2 },
+            { id: 2, name: "元素·火 (Fire)", element: "fire", cost: 2 },
+            { id: 3, name: "元素·雷 (Thunder)", element: "thunder", cost: 3 },
+            { id: 4, name: "元素·風 (Wind)", element: "wind", cost: 2 }
+        ];
+
+        let selectedCards = []; // 儲存玩家選中的兩張牌
+        let enemies = [];
+
+        function initHand() {
+            const container = document.getElementById("hand-container");
+            container.innerHTML = "";
+            playerHand.forEach((card) => {
+                let div = document.createElement("div");
+                div.className = "card";
+                div.dataset.id = card.id;
+                div.innerHTML = `<b>${card.name}</b><br><small>消耗: ${card.cost} MP</small>`;
+                div.onclick = () => toggleCardSelection(card, div);
+                container.appendChild(div);
+            });
+        }
+
+        function toggleCardSelection(card, elementNode) {
+            const index = selectedCards.findIndex(c => c.id === card.id);
+            if (index > -1) {
+                selectedCards.splice(index, 1);
+                elementNode.classList.remove("selected");
+            } else {
+                if (selectedCards.length < 2) {
+                    selectedCards.push(card);
+                    elementNode.classList.add("selected");
+                } else {
+                    document.getElementById("combat-log").innerText = "⚠️ 最多只能選擇 2 張元素卡牌進行 Combo 融合！";
+                    return;
+                }
+            }
+            updateComboStatus();
+        }
+
+        function updateComboStatus() {
+            if (selectedCards.length === 0) {
+                document.getElementById("combo-display").innerText = "🔥 雙卡 Combo 槽位: 請點擊兩張手牌進行屬性融合 (已選 0/2)";
+            } else if (selectedCards.length === 1) {
+                document.getElementById("combo-display").innerText = `🔥 已選 1 張: [${selectedCards[0].name}]，請再選第 2 張 (已選 1/2)`;
+            } else {
+                let comboName = getComboEffect(selectedCards[0].element, selectedCards[1].element);
+                document.getElementById("combo-display").innerText = `⚡ 完美融合就緒！【${comboName}】 ➔ 準備語音吟詠！`;
+            }
+        }
+
+        function getComboEffect(el1, el2) {
+            let pair = [el1, el2].sort().join("+");
+            if (pair === "fire+water") return "蒸氣爆破 (Steam Blast - 範圍擊退)";
+            if (pair === "thunder+water") return "高壓感電 (Electro-Shock - 雙倍暴擊)";
+            if (pair === "fire+thunder") return "超載熔斷 (Overload Fusion - 破防巨傷)";
+            if (pair === "fire+wind") return "烈焰風暴 (Flame Storm - 全場燃燒)";
+            if (pair === "thunder+wind") return "雷暴磁場 (Magnetic Storm - 緩速禁錮)";
+            if (pair === "water+wind") return "冰晶風暴 (Blizzard - 凍結敵方)";
+            return "元素共鳴 (Elemental Resonance - 標準強化)";
+        }
+
+        function spawnEnemy() {
+            const db = vocabDatabases[gameState.currentLang];
+            const randomVocab = db[Math.floor(Math.random() * db.length)];
+            const lanes = [80, 200, 320];
+            const targetY = lanes[Math.floor(Math.random() * lanes.length)];
+
+            enemies.push({
+                x: 820,
+                y: targetY,
+                radius: 18,
+                speed: 0.7 + (gameState.wave * 0.05),
+                targetWord: randomVocab.word,
+                meaning: randomVocab.meaning,
+                hp: 120,
+                maxHp: 120
+            });
+        }
+
+        function changeLanguageMode() {
+            gameState.currentLang = document.getElementById("lang-select").value;
+            document.getElementById("combat-log").innerText = `已切換語言題庫，準備迎擊新波次！`;
+            enemies.forEach(e => {
+                const db = vocabDatabases[gameState.currentLang];
+                const rv = db[Math.floor(Math.random() * db.length)];
+                e.targetWord = rv.word;
+                e.meaning = rv.meaning;
+            });
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "rgba(0, 255, 204, 0.15)";
+            ctx.lineWidth = 2;
+            for (let i = 1; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * 100);
+                ctx.lineTo(800, i * 100);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = "#00ffcc";
+            ctx.fillRect(20, 40, 20, 320);
+            ctx.fillStyle = "#0b0f19";
+            ctx.font = "bold 11px monospace";
+            ctx.fillText("BASE", 22, 200);
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let en = enemies[i];
+                en.x -= en.speed;
+
+                ctx.fillStyle = "#ff0055";
+                ctx.beginPath();
+                ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                ctx.fillStyle = "#ffcc00";
+                ctx.font = "bold 13px monospace";
+                ctx.fillText(`Target: ${en.targetWord} (${en.meaning})`, en.x - 55, en.y - 25);
+
+                ctx.fillStyle = "#333";
+                ctx.fillRect(en.x - 20, en.y + 22, 40, 5);
+                ctx.fillStyle = "#00ffcc";
+                let hpBarWidth = (en.hp / en.maxHp) * 40;
+                ctx.fillRect(en.x - 20, en.y + 22, Math.max(0, hpBarWidth), 5);
+
+                if (en.x <= 45) {
+                    gameState.baseHp -= 15;
+                    document.getElementById("base-hp").innerText = Math.max(0, gameState.baseHp);
+                    enemies.splice(i, 1);
+                    if (gameState.baseHp <= 0) {
+                        alert("⚠️ 防線崩潰！主城陷落，遊戲重置。");
+                        gameState.baseHp = 100;
+                        gameState.wave = 1;
+                        enemies = [];
+                    }
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("您的瀏覽器不支援 Web Speech API，請使用 Google Chrome 遊玩！");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = gameState.currentLang === 'ja' ? 'ja-JP' : (gameState.currentLang === 'es' ? 'es-ES' : 'en-US');
+            recognition.start();
+
+            document.getElementById("mic-status").innerText = "🔴 語音接收中... 請清晰唸出目標單字";
+
+            recognition.onresult = function(event) {
+                const said = event.results[0][0].transcript.trim();
+                document.getElementById("mic-status").innerText = `🎙️ 辨識結果: "${said}"`;
+
+                // 計算傷害與 Combo 加成
+                let damage = 50;
+                let bonusMsg = "";
+                if (selectedCards.length === 2) {
+                    let combo = getComboEffect(selectedCards[0].element, selectedCards[1].element);
+                    damage = 100; // Combo 雙倍傷害
+                    bonusMsg = ` 🌟 觸發【${combo}】暴擊！`;
+                    // 發動後消耗卡牌與重置選取
+                    selectedCards = [];
+                    initHand();
+                    updateComboStatus();
+                }
+
+                let hitFound = false;
+                for (let i = 0; i < enemies.length; i++) {
+                    if (said.toLowerCase().includes(enemies[i].targetWord.toLowerCase())) {
+                        enemies[i].hp -= damage;
+                        hitFound = true;
+                        document.getElementById("combat-log").innerText = `⚡ 詠唱命中 【${enemies[i].targetWord}】！造成 ${damage} 點傷害！${bonusMsg}`;
+                        
+                        if (enemies[i].hp <= 0) {
+                            document.getElementById("combat-log").innerText += ` ➔ 敵方瓦解，MP 能量回充！`;
+                            enemies.splice(i, 1);
+                            gameState.mp = Math.min(10, gameState.mp + 3);
+                            document.getElementById("mp-val").innerText = gameState.mp;
+                        }
+                        break;
+                    }
+                }
+
+                if (!hitFound) {
+                    document.getElementById("combat-log").innerText = `❌ 發音未命中場上目標（你唸了: ${said}）`;
+                }
+            };
+
+            recognition.onerror = function() {
+                document.getElementById("mic-status").innerText = "⚠️ 語音辨識逾時或未偵測到聲音";
+            };
+        }
+
+        setInterval(() => {
+            if (enemies.length < 5) {
+                spawnEnemy();
+            }
+        }, 4500);
+
+        initHand();
+        gameLoop();
+    </script>
+</body>
+</html>
