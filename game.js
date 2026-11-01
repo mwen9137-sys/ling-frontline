@@ -1,85 +1,124 @@
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-// 簡單的怪獸與跑道模擬
-let enemy = { x: 750, y: 180, radius: 20, speed: 1, target: "Cold", hp: 100 };
+let gameState = 'START';
+let hp = 20;
+let gold = 120;
+let wave = 1;
+let maxWaves = 5;
+let selectedSummonType = null;
 
-function drawGame() {
-    // 清空畫面
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+// 語言題庫
+const quizList = [
+    { q: "請選出英文「Trade-off (代價平衡)」的正確含意：", options: ["有得必有失的取捨", "無條件的贈送", "絕對的勝利", "完全的放棄"], answer: 0 },
+    { q: "法語「C'est la vie」的意思是？", options: ["這就是人生", "早安", "謝謝", "再見"], answer: 0 },
+    { q: "日語「一期一會」強調的是？", options: ["珍視當下的相遇", "永恆不變", "無限循環", "戰鬥勝利"], answer: 0 },
+    { q: "英文「Strategic (戰略性的)」的反義詞較接近？", options: ["隨機盲目的", "深思熟慮的", "精準的", "計畫性的"], answer: 0 },
+    { q: "西班牙語「Amigo」中文是？", options: ["朋友", "敵人", "陌生人", "戰士"], answer: 0 }
+];
+let currentQuizIndex = 0;
 
-    // 畫 3 條平行跑道
-    ctx.strokeStyle = "#333";
-    ctx.lineWidth = 2;
-    for (let i = 1; i <= 3; i++) {
-        ctx.beginPath();
-        ctx.moveTo(0, i * 100);
-        ctx.lineTo(800, i * 100);
-        ctx.stroke();
+const path = [{x: 0, y: 190}, {x: 120, y: 190}, {x: 240, y: 190}, {x: 360, y: 190}, {x: 480, y: 190}, {x: 600, y: 190}];
+const defenseSlots = [
+    {x: 100, y: 120, occupied: false},
+    {x: 200, y: 260, occupied: false},
+    {x: 300, y: 120, occupied: false},
+    {x: 400, y: 260, occupied: false},
+    {x: 500, y: 120, occupied: false}
+];
+
+let units = [];
+let enemies = [];
+let projectiles = [];
+
+class Enemy {
+    constructor(waveMultiplier) {
+        this.x = 0;
+        this.y = 190;
+        this.speed = 1.1 + waveMultiplier * 0.15;
+        this.maxHealth = 40 + waveMultiplier * 25;
+        this.health = this.maxHealth;
+        this.radius = 12;
     }
-
-    // 畫我方主城
-    ctx.fillStyle = "#00ffcc";
-    ctx.fillRect(50, 150, 30, 100);
-
-    // 畫敵方怪獸
-    if (enemy.hp > 0) {
-        ctx.fillStyle = "#ff0055";
+    update() {
+        this.x += this.speed;
+        if (this.x >= 600) return true;
+        return false;
+    }
+    draw() {
+        ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = '#991b1b';
+        ctx.lineWidth = 2;
+        ctx.stroke();
 
-        // 畫怪獸頭頂的語言目標標籤
-        ctx.fillStyle = "#fff";
-        ctx.font = "14px monospace";
-        ctx.fillText(`Target: ${enemy.target}`, enemy.x - 40, enemy.y - 30);
-        ctx.fillText(`HP: ${enemy.hp}`, enemy.x - 20, enemy.y + 35);
-
-        // 怪獸向前移動
-        enemy.x -= enemy.speed;
-        if (enemy.x < 80) {
-            alert("主城被突破！ Game Over");
-            enemy.x = 750;
-            enemy.hp = 100;
-        }
+        ctx.fillStyle = '#000';
+        ctx.fillRect(this.x - 14, this.y - 20, 28, 4);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(this.x - 14, this.y - 20, 28 * (this.health / this.maxHealth), 4);
     }
-
-    requestAnimationFrame(drawGame);
 }
 
-// 瀏覽器內建免費語音辨識 (Web Speech API)
-function startVoiceRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("您的瀏覽器不支援語音辨識，請使用 Chrome！");
-        return;
+class DefenderUnit {
+    constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.range = type === 'ranged' ? 130 : (type === 'combo' ? 150 : 85);
+        this.damage = type === 'ranged' ? 18 : (type === 'combo' ? 30 : 12);
+        this.cooldown = 0;
+        this.maxCooldown = type === 'ranged' ? 45 : (type === 'combo' ? 30 : 35);
     }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.start();
-
-    document.getElementById("speech-result").innerText = "聆聽中... 請大聲唸出 'Cold'";
-
-    recognition.onresult = function(event) {
-        const said = event.results[0][0].transcript.trim();
-        document.getElementById("speech-result").innerText = `你唸了: "${said}"`;
-
-        // 判定是否命中目標
-        if (said.toLowerCase().includes(enemy.target.toLowerCase())) {
-            enemy.hp -= 50;
-            document.getElementById("speech-result").innerText += " ➔ 命中克制！造成 50 傷害！";
-            if (enemy.hp <= 0) {
-                alert("擊殺怪獸！獲得 MP 返還！");
-                enemy.x = 750;
-                enemy.hp = 100;
+    update() {
+        if (this.cooldown > 0) this.cooldown--;
+        let target = null;
+        for (let e of enemies) {
+            if (Math.hypot(e.x - this.x, e.y - this.y) <= this.range) {
+                target = e;
+                break;
             }
-        } else {
-            document.getElementById("speech-result").innerText += " ➔ 發音不符目標，傷害減半！";
         }
-    };
+        if (target && this.cooldown === 0) {
+            projectiles.push({ x: this.x, y: this.y, target: target, speed: 6, damage: this.damage });
+            this.cooldown = this.maxCooldown;
+        }
+    }
+    draw() {
+        let color = '#3b82f6';
+        let label = '戰';
+        if (this.type === 'ranged') { color = '#a855f7'; label = '法'; }
+        if (this.type === 'combo') { color = '#f59e0b'; label = '超'; }
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, this.x, this.y + 3);
+    }
 }
 
-// 啟動主循環
-drawGame();
-window.onload = initGame;
+function loadQuiz() {
+    if (currentQuizIndex >= quizList.length) currentQuizIndex = 0;
+    let quiz = quizList[currentQuizIndex];
+    document.getElementById('quiz-question').innerText = `Q: ${quiz.q}`;
+    let optContainer = document.getElementById('quiz-options');
+    optContainer.innerHTML = '';
+    quiz.options.forEach((opt, idx) => {
+        let btn = document.createElement('button');
+        btn.className = "w-full text-left bg-slate-900 hover:bg-slate-800 text-[11px] p-2 rounded border border-slate-800 transition text-slate-200";
+        btn.innerText = `🔹 ${opt}`;
+        btn.onclick = () => checkQuizAnswer(idx, quiz.answer);
+        optContainer.appendChild(btn);
+    });
+}
+
+function checkQuizAnswer(selected
