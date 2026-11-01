@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>語靈陣線 (Lingo Frontline) - 完整企劃復原版</title>
+    <title>語靈陣線 (Lingo Frontline)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
@@ -11,11 +11,11 @@
 </head>
 <body class="flex flex-col items-center justify-between min-h-screen p-4">
 
-    <!-- 頂部企劃狀態列 -->
+    <!-- 頂部狀態列 -->
     <header class="w-full max-w-6xl flex justify-between items-center bg-slate-900 p-4 rounded-xl shadow-xl border border-slate-800">
         <div>
-            <h1 class="text-2xl font-black text-amber-400 tracking-wider">🛡️ 語靈陣線 <span class="text-xs text-slate-400">Lingo Frontline (企劃實踐版)</span></h1>
-            <p class="text-xs text-slate-400">核心設計：語言練習驅動 × 有得必有失的代價平衡 × 雙牌 Combo 隨機召喚</p>
+            <h1 class="text-2xl font-black text-amber-400 tracking-wider">🛡️ 語靈陣線 <span class="text-xs text-slate-400">Lingo Frontline</span></h1>
+            <p class="text-xs text-slate-400">語言學習驅動 × 有得必有失的代價平衡 × 雙牌 Combo 隨機召喚</p>
         </div>
         <div class="flex gap-4 text-sm font-bold">
             <div class="bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">❤️ 主城生命: <span id="hp-display" class="text-red-400">20</span></div>
@@ -27,11 +27,11 @@
     <!-- 主遊戲介面三欄式佈局 -->
     <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-4 gap-4 my-4">
         
-        <!-- 左側：6位玩家親繪英雄靈魂展示區 (企劃要求) -->
+        <!-- 左側：6位玩家親繪英雄靈魂展示區 -->
         <aside class="bg-slate-900 p-4 rounded-xl shadow-lg border border-slate-800 flex flex-col justify-between">
             <div>
                 <h3 class="text-xs font-bold text-amber-400 mb-2 uppercase tracking-wider border-b border-slate-800 pb-2">👑 玩家親繪英雄 (6位核心)</h3>
-                <p class="text-[11px] text-slate-400 mb-3">你親手繪製的主角靈魂，提供全隊光環與被動技能！</p>
+                <p class="text-[11px] text-slate-400 mb-3">你親手繪製的主角靈魂，賦予全隊被動加成！</p>
                 
                 <div class="space-y-2">
                     <div class="bg-slate-950 p-2 rounded border border-slate-800 text-xs">
@@ -42,142 +42,3 @@
                         <span class="font-bold text-purple-300">2. 元素使·希雅</span>
                         <p class="text-[10px] text-slate-400">被動：遠程法術暴擊率 +15%</p>
                     </div>
-                    <div class="bg-slate-950 p-2 rounded border border-slate-800 text-xs text-slate-500">
-                        <span>3~6. 更多親繪英雄解鎖中...</span>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-4 text-[10px] text-slate-400 bg-slate-950 p-2 rounded border border-slate-800">
-                💡 <span class="text-slate-300">美術分工：</span>英雄你親繪，怪獸/小兵/圖騰由免費 AI 塗鴉風格生成去背 PNG！
-            </div>
-        </aside>
-
-        <!-- 中間：橫向捲軸塔防戰場 (佔 2 格) -->
-        <div class="lg:col-span-2 bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-800 relative flex flex-col items-center justify-center p-2">
-            <canvas id="gameCanvas" width="600" height="380" class="bg-slate-950 rounded-lg cursor-crosshair"></canvas>
-            
-            <!-- 開始與結算遮罩 -->
-            <div id="overlay-screen" class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center text-center p-6">
-                <h2 id="overlay-title" class="text-2xl font-bold mb-2 text-amber-400">🛡️ 語靈陣線：準備迎戰！</h2>
-                <p id="overlay-desc" class="text-xs text-slate-300 mb-6 max-w-md">
-                    透過右側的**語言練習答題**賺取金幣；運用**代價平衡**：選擇穩定單牌召喚，或承擔隨機風險發動 **Combo 雙牌超級召喚**！
-                </p>
-                <button id="start-btn" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg transition transform hover:scale-105 text-sm">
-                    開始冒險與防守
-                </button>
-            </div>
-        </div>
-
-        <!-- 右側：語言練習區 & 核心代價平衡召喚面板 -->
-        <aside class="bg-slate-900 p-4 rounded-xl shadow-lg border border-slate-800 flex flex-col justify-between">
-            <div>
-                <h3 class="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider border-b border-slate-800 pb-2">📚 語言練習挑戰 (賺取資源)</h3>
-                <div id="quiz-container" class="bg-slate-950 p-3 rounded-lg border border-slate-800 mb-3">
-                    <p id="quiz-question" class="text-xs text-slate-200 mb-2 font-bold">點擊「開始冒險」載入語言題目！</p>
-                    <div id="quiz-options" class="space-y-1.5"></div>
-                    <p id="quiz-feedback" class="text-[11px] mt-2 font-bold text-center h-4"></p>
-                </div>
-
-                <h3 class="text-xs font-bold text-amber-400 mb-2 uppercase tracking-wider border-b border-slate-800 pb-2">⚖️ 代價平衡與召喚</h3>
-                <div class="space-y-2">
-                    <!-- 一般穩定召喚 -->
-                    <button onclick="summonUnit('melee')" class="w-full text-left bg-slate-950 hover:bg-slate-800 p-2 rounded border border-slate-800 transition flex justify-between items-center">
-                        <div>
-                            <div class="font-bold text-blue-400 text-xs">⚔️ 穩定召喚：近戰語靈騎士</div>
-                            <div class="text-[10px] text-slate-400">血厚坦怪，無遠程（標準數值）</div>
-                        </div>
-                        <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">50G</span>
-                    </button>
-
-                    <button onclick="summonUnit('ranged')" class="w-full text-left bg-slate-950 hover:bg-slate-800 p-2 rounded border border-slate-800 transition flex justify-between items-center">
-                        <div>
-                            <div class="font-bold text-purple-400 text-xs">🏹 穩定召喚：遠程元素法師</div>
-                            <div class="text-[10px] text-slate-400">高傷群攻，血薄易破（玻璃大砲）</div>
-                        </div>
-                        <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">75G</span>
-                    </button>
-
-                    <!-- Combo 雙牌隨機召喚 -->
-                    <div class="pt-2 border-t border-slate-800">
-                        <div class="font-bold text-amber-400 text-[11px] mb-0.5">🎲 雙牌 Combo 隨機超級召喚</div>
-                        <p class="text-[10px] text-slate-400 mb-1.5">數值暴增，但**兵種完全隨機**（承擔急需坦卻來法師的風險！）</p>
-                        <button onclick="triggerComboSummon()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 text-slate-950 font-bold p-2 rounded transition text-xs shadow">
-                            發動雙牌 Combo (100G)
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="text-[10px] text-slate-400 mt-2 bg-slate-950 p-2 rounded border border-slate-800">
-                🔥 <span class="text-slate-300">核心精神：</span>有得必有失，賭博抽到隨機超級兵是逆轉關鍵！
-            </div>
-        </aside>
-
-    </main>
-
-    <!-- 遊戲核心邏輯 Script -->
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        let gameState = 'START';
-        let hp = 20;
-        let gold = 120;
-        let wave = 1;
-        let maxWaves = 5;
-        let selectedSummonType = null;
-
-        // 語言題庫 (對應你的語言練習核心)
-        const quizList = [
-            { q: "請選出英文「Trade-off (代價平衡)」的正確含意：", options: ["有得必有失的取捨", "無條件的贈送", "絕對的勝利", "完全的放棄"], answer: 0 },
-            { q: "法語「C'est la vie」的意思是？", options: ["這就是人生", "早安", "謝謝", "再見"], answer: 0 },
-            { q: "日語「一期一會」強調的是？", options: ["珍視當下的相遇", "永恆不變", "無限循環", "戰鬥勝利"], answer: 0 },
-            { q: "英文「Strategic (戰略性的)」的反義詞較接近？", options: ["隨機盲目的", "深思熟慮的", "精準的", "計畫性的"], answer: 0 },
-            { q: "西班牙語「Amigo」中文是？", options: ["朋友", "敵人", "陌生人", "戰士"], answer: 0 }
-        ];
-        let currentQuizIndex = 0;
-
-        // 橫向捲軸路徑與防禦陣地座標
-        const path = [{x: 0, y: 190}, {x: 120, y: 190}, {x: 240, y: 190}, {x: 360, y: 190}, {x: 480, y: 190}, {x: 600, y: 190}];
-        const defenseSlots = [
-            {x: 100, y: 120, occupied: false},
-            {x: 200, y: 260, occupied: false},
-            {x: 300, y: 120, occupied: false},
-            {x: 400, y: 260, occupied: false},
-            {x: 500, y: 120, occupied: false}
-        ];
-
-        let units = [];
-        let enemies = [];
-        let projectiles = [];
-
-        class Enemy {
-            constructor(waveMultiplier) {
-                this.x = 0;
-                this.y = 190;
-                this.speed = 1.1 + waveMultiplier * 0.15;
-                this.maxHealth = 40 + waveMultiplier * 25;
-                this.health = this.maxHealth;
-                this.radius = 12;
-            }
-            update() {
-                this.x += this.speed;
-                if (this.x >= 600) {
-                    return true; // 突破防線
-                }
-                return false;
-            }
-            draw() {
-                ctx.fillStyle = '#ef4444';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#991b1b';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // 血條
-                ctx.fillStyle = '#000';
-                ctx.fillRect(this.x - 14, this.y - 20, 28, 4);
-                ctx.fillStyle = '#22c55e';
-                ctx.fillRect(this.x - 14, this.y - 20, 28 * (this.health / this.maxHealth
