@@ -385,3 +385,349 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>語靈陣線：星際防線 (Cosmic Lingo Frontline)</title>
+    <style>
+        :root {
+            --bg-deep: #050814;
+            --panel-bg: #0d1224;
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff0055;
+            --neon-gold: #ffd700;
+            --text-main: #f0f6fc;
+        }
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+            user-select: none;
+        }
+        header h1 {
+            margin: 5px 0;
+            font-size: 1.6rem;
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+        .dashboard {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
+        .stat-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-cyan);
+            padding: 5px 12px;
+            border-radius: 4px;
+        }
+        .game-container {
+            position: relative;
+            width: 800px;
+            margin: 0 auto;
+            border: 2px solid var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+            background: #020408;
+            border-radius: 6px;
+        }
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+        .control-panel {
+            width: 800px;
+            margin: 10px auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-gold);
+            padding: 10px;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .cards-flex {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .card {
+            background: #151d30;
+            border: 2px solid var(--neon-cyan);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: var(--neon-cyan);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .card:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            transform: translateY(-3px);
+        }
+        .card.selected {
+            border-color: var(--neon-gold);
+            background: #3d341f;
+            color: var(--neon-gold);
+        }
+        .action-bar {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            align-items: center;
+        }
+        button.primary-btn {
+            padding: 6px 16px;
+            background: var(--neon-pink);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button.primary-btn:hover {
+            background: var(--neon-cyan);
+            color: #000;
+        }
+        select {
+            background: #151d30;
+            color: #fff;
+            border: 1px solid var(--neon-gold);
+            padding: 4px;
+            font-family: inherit;
+        }
+        #combat-log {
+            color: var(--neon-cyan);
+            font-weight: bold;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌌 語靈陣線：星際防線 🌌</h1>
+    </header>
+
+    <div class="dashboard">
+        <div class="stat-box">🛸 基地護盾: <span id="base-hp" style="color:var(--neon-pink);">1000</span>/1000</div>
+        <div class="stat-box">⚡ 能源 MP: <span id="mp-val" style="color:var(--neon-cyan);">10</span>/10</div>
+        <div class="stat-box">🌠 當前波次: <span id="wave-val" style="color:var(--neon-gold);">Sector 1</span></div>
+        <div class="stat-box">🎯 擊殺數: <span id="kill-val" style="color:#00ffcc;">0</span>/5</div>
+    </div>
+
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+    </div>
+
+    <div class="control-panel">
+        <div style="margin-bottom: 6px; font-size: 0.85rem; color: #aaa;">
+            🌐 語系設定：
+            <select id="lang-select" onchange="changeLanguageMode()">
+                <option value="en">English (Cosmic)</option>
+                <option value="ja">日本語 (宇宙)</option>
+                <option value="es">Español (Espacio)</option>
+                <option value="zh">中文 (星際)</option>
+            </select>
+        </div>
+
+        <div id="combo-display" style="color:var(--neon-gold); font-size:0.85rem; margin-bottom:4px;">🔥 點選手牌選取，或直接「點擊手牌再點擊畫布」部署防禦能量！</div>
+        <div class="cards-flex" id="hand-container"></div>
+
+        <div class="action-bar">
+            <button class="primary-btn" onclick="startVoiceRecognition()">🎙️ 啟動語音詠唱</button>
+            <span id="mic-status" style="font-size: 0.8rem; color: var(--neon-gold);">等待語音指令...</span>
+        </div>
+        <div id="combat-log">系統就緒：防禦塔會自動雷射開火！每擊殺 5 隻怪獸自動晉級下一 Sector！</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let gameState = {
+            baseHp: 1000,
+            mp: 10,
+            wave: 1,
+            kills: 0,
+            currentLang: 'en'
+        };
+
+        const vocabDatabases = {
+            en: [
+                { word: "Orbit", meaning: "軌道", element: "water" },
+                { word: "Meteor", meaning: "流星", element: "fire" },
+                { word: "Gravity", meaning: "重力", element: "earth" },
+                { word: "Nebula", meaning: "星雲", element: "light" },
+                { word: "Pulsar", meaning: "脈衝星", element: "thunder" }
+            ],
+            ja: [
+                { word: "Kousei", meaning: "恒星", element: "fire" },
+                { word: "Inryoku", meaning: "引力", element: "earth" },
+                { word: "Wakusei", meaning: "惑星", element: "water" },
+                { word: "Ryūsei", meaning: "流星", element: "thunder" }
+            ],
+            es: [
+                { word: "Galaxia", meaning: "銀河", element: "light" },
+                { word: "Cometa", meaning: "彗星", element: "water" },
+                { word: "Gravedad", meaning: "重力", element: "earth" }
+            ],
+            zh: [
+                { word: "星雲", meaning: "Nebula", element: "light" },
+                { word: "黑洞", meaning: "Black Hole", element: "dark" },
+                { word: "超新星", meaning: "Supernova", element: "fire" }
+            ]
+        };
+
+        let playerHand = [
+            { id: 1, name: "星力·水 (Orbit)", element: "water", cost: 2 },
+            { id: 2, name: "星力·火 (Meteor)", element: "fire", cost: 2 },
+            { id: 3, name: "星力·雷 (Pulsar)", element: "thunder", cost: 3 },
+            { id: 4, name: "星力·地 (Gravity)", element: "earth", cost: 2 }
+        ];
+
+        let selectedCards = [];
+        let activeCardForDeploy = null; // 用於點擊手牌後點擊畫布部署
+        let enemies = [];
+        let effects = []; // 雷射光束與爆炸特效
+
+        // 防禦塔陣地
+        let towers = [
+            { x: 120, y: 80, name: "雷射塔", range: 250, damage: 1.5, coolDown: 0, maxCd: 30 },
+            { x: 120, y: 200, name: "重炮塔", range: 300, damage: 3.0, coolDown: 0, maxCd: 60 },
+            { x: 120, y: 320, name: "冰凍塔", range: 220, damage: 1.0, coolDown: 0, maxCd: 45 }
+        ];
+
+        function initHand() {
+            const container = document.getElementById("hand-container");
+            if (!container) return;
+            container.innerHTML = "";
+            playerHand.forEach((card) => {
+                let div = document.createElement("div");
+                div.className = "card";
+                if (activeCardForDeploy && activeCardForDeploy.id === card.id) {
+                    div.classList.add("selected");
+                }
+                div.innerHTML = `<b>${card.name}</b><br><small>MP: ${card.cost}</small>`;
+                div.onclick = () => {
+                    // 點擊手牌代表選中準備部署到畫布
+                    activeCardForDeploy = card;
+                    document.getElementById("combat-log").innerText = `🎯 已選定【${card.name}】，請點擊畫布任意跑道進行部署！`;
+                    initHand();
+                };
+                container.appendChild(div);
+            });
+        }
+
+        // 畫布點擊事件：實現點擊手牌後點擊畫布部署攻擊/能量陣
+        canvas.onclick = function(event) {
+            if (!activeCardForDeploy) return;
+            const rect = canvas.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+
+            if (gameState.mp >= activeCardForDeploy.cost) {
+                gameState.mp -= activeCardForDeploy.cost;
+                document.getElementById("mp-val").innerText = gameState.mp;
+
+                // 在點擊位置產生一個能量轟炸特效
+                effects.push({ type: 'blast', x: clickX, y: clickY, radius: 10, maxRadius: 50, life: 20 });
+
+                // 對點擊附近的怪獸造成傷害
+                enemies.forEach(en => {
+                    let dist = Math.hypot(en.x - clickX, en.y - clickY);
+                    if (dist < 60) {
+                        en.hp -= 60;
+                        document.getElementById("combat-log").innerText = `💥 戰術部署命中【${en.targetWord}】！造成 60 點傷害！`;
+                    }
+                });
+
+                activeCardForDeploy = null;
+                initHand();
+            } else {
+                document.getElementById("combat-log").innerText = `⚠️ 能源 MP 不足，無法部署！`;
+                activeCardForDeploy = null;
+                initHand();
+            }
+        };
+
+        function spawnEnemy() {
+            const db = vocabDatabases[gameState.currentLang];
+            if (!db || db.length === 0) return;
+            const rv = db[Math.floor(Math.random() * db.length)];
+            const lanes = [80, 200, 320];
+            const y = lanes[Math.floor(Math.random() * lanes.length)];
+
+            enemies.push({
+                x: 820,
+                y: y,
+                radius: 18,
+                speed: 0.5 + (gameState.wave * 0.1),
+                targetWord: rv.word,
+                meaning: rv.meaning,
+                hp: 100 + (gameState.wave * 20),
+                maxHp: 100 + (gameState.wave * 20)
+            });
+        }
+
+        function changeLanguageMode() {
+            gameState.currentLang = document.getElementById("lang-select").value;
+            enemies.forEach(e => {
+                const db = vocabDatabases[gameState.currentLang];
+                if (db && db.length > 0) {
+                    const rv = db[Math.floor(Math.random() * db.length)];
+                    e.targetWord = rv.word;
+                    e.meaning = rv.meaning;
+                }
+            });
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. 繪製太空戰場與跑道
+            ctx.fillStyle = "#030712";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "rgba(0, 243, 255, 0.2)";
+            ctx.lineWidth = 3;
+            for (let i = 1; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * 100);
+                ctx.lineTo(800, i * 100);
+                ctx.stroke();
+            }
+
+            // 2. 基地主城
+            ctx.fillStyle = "#00f3ff";
+            ctx.fillRect(20, 20, 20, 360);
+            ctx.fillStyle = "#000";
+            ctx.font = "bold 11px monospace";
+            ctx.fillText("BASE", 12, 205);
+
+            // 3. 防禦塔自動攻擊邏輯與繪製
+            towers.forEach(t => {
+                ctx.fillStyle = "#1e293b";
+                ctx.strokeStyle = "#00f3ff";
+                ctx.lineWidth = 2;
+                ctx.fillRect(t.x - 20, t.y - 25, 40, 50);
+                ctx.strokeRect(t.x - 20, t.y - 25, 40, 50);
+
+                ctx.fillStyle = "#ffd700";
+                ctx.font = "10px monospace";
+                ctx.fillText(t.name, t.x - 18, t.y - 30);
+
+                // 塔的冷卻與攻擊
+                if (t.coolDown > 0) t.coolDown--;
+                
+                // 尋找射程內的最近怪獸
+                let target = null;
+                let minDist = t.range;
+                enemies.forEach(en => {
+                    let d = Math.hypot(en.
