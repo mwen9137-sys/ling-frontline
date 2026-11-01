@@ -3,156 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>語靈陣線 - Lingo Frontline (MVP)</title>
+    <title>語靈陣線 (Lingo Frontline) - 完整企劃復原版</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
+<body class="flex flex-col items-center justify-between min-h-screen p-4">
 
-    <!-- 遊戲標題與狀態列 -->
-    <header class="w-full max-w-4xl flex justify-between items-center mb-4 bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700">
+    <!-- 頂部企劃狀態列 -->
+    <header class="w-full max-w-6xl flex justify-between items-center bg-slate-900 p-4 rounded-xl shadow-xl border border-slate-800">
         <div>
-            <h1 class="text-2xl font-black text-amber-400 tracking-wider">🛡️ 語靈陣線 <span class="text-xs text-slate-400">Lingo Frontline MVP</span></h1>
-            <p class="text-xs text-slate-400">代價平衡系統 × Combo 隨機召喚</p>
+            <h1 class="text-2xl font-black text-amber-400 tracking-wider">🛡️ 語靈陣線 <span class="text-xs text-slate-400">Lingo Frontline (企劃實踐版)</span></h1>
+            <p class="text-xs text-slate-400">核心設計：語言練習驅動 × 有得必有失的代價平衡 × 雙牌 Combo 隨機召喚</p>
         </div>
-        <div class="flex gap-6 text-sm font-bold">
-            <div class="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">❤️ 生命: <span id="hp-display" class="text-red-400">20</span></div>
-            <div class="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">💰 金幣: <span id="gold-display" class="text-amber-400">150</span></div>
-            <div class="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">⚔️ 波次: <span id="wave-display" class="text-blue-400">1 / 5</span></div>
+        <div class="flex gap-4 text-sm font-bold">
+            <div class="bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">❤️ 主城生命: <span id="hp-display" class="text-red-400">20</span></div>
+            <div class="bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">💰 語靈金幣: <span id="gold-display" class="text-amber-400">120</span></div>
+            <div class="bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">⚔️ 防守波次: <span id="wave-display" class="text-blue-400">1 / 5</span></div>
         </div>
     </header>
 
-    <!-- 遊戲主畫面與操作面板 -->
-    <main class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- 主遊戲介面三欄式佈局 -->
+    <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-4 gap-4 my-4">
         
-        <!-- 遊戲畫布 (Canvas) -->
-        <div class="md:col-span-3 bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-700 relative flex justify-center items-center">
-            <canvas id="gameCanvas" width="700" height="450" class="bg-slate-950 cursor-crosshair"></canvas>
+        <!-- 左側：6位玩家親繪英雄靈魂展示區 (企劃要求) -->
+        <aside class="bg-slate-900 p-4 rounded-xl shadow-lg border border-slate-800 flex flex-col justify-between">
+            <div>
+                <h3 class="text-xs font-bold text-amber-400 mb-2 uppercase tracking-wider border-b border-slate-800 pb-2">👑 玩家親繪英雄 (6位核心)</h3>
+                <p class="text-[11px] text-slate-400 mb-3">你親手繪製的主角靈魂，提供全隊光環與被動技能！</p>
+                
+                <div class="space-y-2">
+                    <div class="bg-slate-950 p-2 rounded border border-slate-800 text-xs">
+                        <span class="font-bold text-amber-300">1. 語靈劍士·艾爾</span>
+                        <p class="text-[10px] text-slate-400">被動：近戰防禦力 +20%</p>
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded border border-slate-800 text-xs">
+                        <span class="font-bold text-purple-300">2. 元素使·希雅</span>
+                        <p class="text-[10px] text-slate-400">被動：遠程法術暴擊率 +15%</p>
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded border border-slate-800 text-xs text-slate-500">
+                        <span>3~6. 更多親繪英雄解鎖中...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 text-[10px] text-slate-400 bg-slate-950 p-2 rounded border border-slate-800">
+                💡 <span class="text-slate-300">美術分工：</span>英雄你親繪，怪獸/小兵/圖騰由免費 AI 塗鴉風格生成去背 PNG！
+            </div>
+        </aside>
+
+        <!-- 中間：橫向捲軸塔防戰場 (佔 2 格) -->
+        <div class="lg:col-span-2 bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-800 relative flex flex-col items-center justify-center p-2">
+            <canvas id="gameCanvas" width="600" height="380" class="bg-slate-950 rounded-lg cursor-crosshair"></canvas>
             
-            {/* 遊戲未開始或結束的遮罩提示 */}
-            <div id="overlay-screen" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-center p-6">
-                <h2 id="overlay-title" class="text-3xl font-bold mb-2 text-amber-400">準備好迎戰了嗎？</h2>
-                <p id="overlay-desc" class="text-sm text-slate-300 mb-6 max-w-md">體驗「有得必有失」的塔防策略：建造防禦塔、或使用高風險的 Combo 雙牌隨機召喚！</p>
-                <button id="start-btn" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg transition transform hover:scale-105">
-                    開始第一波防守
+            <!-- 開始與結算遮罩 -->
+            <div id="overlay-screen" class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center text-center p-6">
+                <h2 id="overlay-title" class="text-2xl font-bold mb-2 text-amber-400">🛡️ 語靈陣線：準備迎戰！</h2>
+                <p id="overlay-desc" class="text-xs text-slate-300 mb-6 max-w-md">
+                    透過右側的**語言練習答題**賺取金幣；運用**代價平衡**：選擇穩定單牌召喚，或承擔隨機風險發動 **Combo 雙牌超級召喚**！
+                </p>
+                <button id="start-btn" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg transition transform hover:scale-105 text-sm">
+                    開始冒險與防守
                 </button>
             </div>
         </div>
 
-        <!-- 側邊欄：防禦塔建造與代價平衡機制面板 -->
-        <aside class="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 flex flex-col justify-between">
+        <!-- 右側：語言練習區 & 核心代價平衡召喚面板 -->
+        <aside class="bg-slate-900 p-4 rounded-xl shadow-lg border border-slate-800 flex flex-col justify-between">
             <div>
-                <h3 class="text-sm font-bold text-slate-300 mb-3 uppercase tracking-wider border-b border-slate-700 pb-2">防禦與召喚指令</h3>
-                
-                <div class="space-y-3">
-                    <!-- 近戰塔 -->
-                    <button onclick="selectTower('melee')" class="w-full text-left bg-slate-900 hover:bg-slate-700 p-2.5 rounded-lg border border-slate-700 transition flex justify-between items-center group">
+                <h3 class="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider border-b border-slate-800 pb-2">📚 語言練習挑戰 (賺取資源)</h3>
+                <div id="quiz-container" class="bg-slate-950 p-3 rounded-lg border border-slate-800 mb-3">
+                    <p id="quiz-question" class="text-xs text-slate-200 mb-2 font-bold">點擊「開始冒險」載入語言題目！</p>
+                    <div id="quiz-options" class="space-y-1.5"></div>
+                    <p id="quiz-feedback" class="text-[11px] mt-2 font-bold text-center h-4"></p>
+                </div>
+
+                <h3 class="text-xs font-bold text-amber-400 mb-2 uppercase tracking-wider border-b border-slate-800 pb-2">⚖️ 代價平衡與召喚</h3>
+                <div class="space-y-2">
+                    <!-- 一般穩定召喚 -->
+                    <button onclick="summonUnit('melee')" class="w-full text-left bg-slate-950 hover:bg-slate-800 p-2 rounded border border-slate-800 transition flex justify-between items-center">
                         <div>
-                            <div class="font-bold text-blue-400 text-sm">⚔️ 語靈騎士 (近戰)</div>
-                            <div class="text-xs text-slate-400">血厚前線阻擋，無遠程</div>
+                            <div class="font-bold text-blue-400 text-xs">⚔️ 穩定召喚：近戰語靈騎士</div>
+                            <div class="text-[10px] text-slate-400">血厚坦怪，無遠程（標準數值）</div>
                         </div>
-                        <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded font-mono">50G</span>
+                        <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">50G</span>
                     </button>
 
-                    <!-- 遠程塔 -->
-                    <button onclick="selectTower('ranged')" class="w-full text-left bg-slate-900 hover:bg-slate-700 p-2.5 rounded-lg border border-slate-700 transition flex justify-between items-center group">
+                    <button onclick="summonUnit('ranged')" class="w-full text-left bg-slate-950 hover:bg-slate-800 p-2 rounded border border-slate-800 transition flex justify-between items-center">
                         <div>
-                            <div class="font-bold text-purple-400 text-sm">🏹 元素法師 (遠程)</div>
-                            <div class="text-xs text-slate-400">高傷害群攻，血薄易碎</div>
+                            <div class="font-bold text-purple-400 text-xs">🏹 穩定召喚：遠程元素法師</div>
+                            <div class="text-[10px] text-slate-400">高傷群攻，血薄易破（玻璃大砲）</div>
                         </div>
-                        <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded font-mono">75G</span>
+                        <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">75G</span>
                     </button>
 
-                    <!-- Combo 隨機召喚機制 -->
-                    <div class="pt-3 border-t border-slate-700">
-                        <div class="font-bold text-amber-400 text-xs mb-1">🎲 Combo 雙牌隨機召喚</div>
-                        <p class="text-xs text-slate-400 mb-2">高數值但兵種隨機，承擔賭博風險！</p>
-                        <button onclick="triggerComboSummon()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold p-2.5 rounded-lg shadow transition text-xs">
+                    <!-- Combo 雙牌隨機召喚 -->
+                    <div class="pt-2 border-t border-slate-800">
+                        <div class="font-bold text-amber-400 text-[11px] mb-0.5">🎲 雙牌 Combo 隨機超級召喚</div>
+                        <p class="text-[10px] text-slate-400 mb-1.5">數值暴增，但**兵種完全隨機**（承擔急需坦卻來法師的風險！）</p>
+                        <button onclick="triggerComboSummon()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 text-slate-950 font-bold p-2 rounded transition text-xs shadow">
                             發動雙牌 Combo (100G)
                         </button>
                     </div>
                 </div>
             </div>
-
-            <div class="mt-4 pt-3 border-t border-slate-700 text-xs text-slate-400">
-                <span class="text-amber-400 font-bold">提示：</span> 點擊左側地圖上的合法空格來放置防禦塔。
+            
+            <div class="text-[10px] text-slate-400 mt-2 bg-slate-950 p-2 rounded border border-slate-800">
+                🔥 <span class="text-slate-300">核心精神：</span>有得必有失，賭博抽到隨機超級兵是逆轉關鍵！
             </div>
         </aside>
 
     </main>
 
-    <!-- 遊戲核心 JavaScript 邏輯 -->
+    <!-- 遊戲核心邏輯 Script -->
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // 遊戲狀態變數
-        let gameState = 'START'; // START, PLAYING, GAMEOVER, WIN
+        let gameState = 'START';
         let hp = 20;
-        let gold = 150;
+        let gold = 120;
         let wave = 1;
         let maxWaves = 5;
-        let selectedTowerType = null;
+        let selectedSummonType = null;
 
-        // 道路座標點 (仿王國保衛戰的曲折路線)
-        const path = [
-            {x: 0, y: 150},
-            {x: 180, y: 150},
-            {x: 180, y: 300},
-            {x: 380, y: 300},
-            {x: 380, y: 120},
-            {x: 550, y: 120},
-            {x: 550, y: 350},
-            {x: 700, y: 350}
+        // 語言題庫 (對應你的語言練習核心)
+        const quizList = [
+            { q: "請選出英文「Trade-off (代價平衡)」的正確含意：", options: ["有得必有失的取捨", "無條件的贈送", "絕對的勝利", "完全的放棄"], answer: 0 },
+            { q: "法語「C'est la vie」的意思是？", options: ["這就是人生", "早安", "謝謝", "再見"], answer: 0 },
+            { q: "日語「一期一會」強調的是？", options: ["珍視當下的相遇", "永恆不變", "無限循環", "戰鬥勝利"], answer: 0 },
+            { q: "英文「Strategic (戰略性的)」的反義詞較接近？", options: ["隨機盲目的", "深思熟慮的", "精準的", "計畫性的"], answer: 0 },
+            { q: "西班牙語「Amigo」中文是？", options: ["朋友", "敵人", "陌生人", "戰士"], answer: 0 }
+        ];
+        let currentQuizIndex = 0;
+
+        // 橫向捲軸路徑與防禦陣地座標
+        const path = [{x: 0, y: 190}, {x: 120, y: 190}, {x: 240, y: 190}, {x: 360, y: 190}, {x: 480, y: 190}, {x: 600, y: 190}];
+        const defenseSlots = [
+            {x: 100, y: 120, occupied: false},
+            {x: 200, y: 260, occupied: false},
+            {x: 300, y: 120, occupied: false},
+            {x: 400, y: 260, occupied: false},
+            {x: 500, y: 120, occupied: false}
         ];
 
-        let towers = [];
+        let units = [];
         let enemies = [];
-        let bullets = [];
+        let projectiles = [];
 
-        // 塔位格子定義
-        const buildSlots = [
-            {x: 120, y: 90, occupied: false},
-            {x: 240, y: 360, occupied: false},
-            {x: 300, y: 240, occupied: false},
-            {x: 440, y: 180, occupied: false},
-            {x: 480, y: 60, occupied: false},
-            {x: 610, y: 280, occupied: false}
-        ];
-
-        // 敵人物件
         class Enemy {
             constructor(waveMultiplier) {
-                this.pathIndex = 0;
-                this.x = path[0].x;
-                this.y = path[0].y;
-                this.speed = 1.2 + waveMultiplier * 0.2;
+                this.x = 0;
+                this.y = 190;
+                this.speed = 1.1 + waveMultiplier * 0.15;
                 this.maxHealth = 40 + waveMultiplier * 25;
                 this.health = this.maxHealth;
                 this.radius = 12;
             }
-
             update() {
-                const target = path[this.pathIndex + 1];
-                if (!target) return true; // 到達終點
-
-                const dx = target.x - this.x;
-                const dy = target.y - this.y;
-                const dist = Math.hypot(dx, dy);
-
-                if (dist < this.speed) {
-                    this.x = target.x;
-                    this.y = target.y;
-                    this.pathIndex++;
-                } else {
-                    this.x += (dx / dist) * this.speed;
-                    this.y += (dy / dist) * this.speed;
+                this.x += this.speed;
+                if (this.x >= 600) {
+                    return true; // 突破防線
                 }
                 return false;
             }
-
             draw() {
                 ctx.fillStyle = '#ef4444';
                 ctx.beginPath();
@@ -164,267 +178,6 @@
 
                 // 血條
                 ctx.fillStyle = '#000';
-                ctx.fillRect(this.x - 15, this.y - 20, 30, 5);
+                ctx.fillRect(this.x - 14, this.y - 20, 28, 4);
                 ctx.fillStyle = '#22c55e';
-                ctx.fillRect(this.x - 15, this.y - 20, 30 * (this.health / this.maxHealth), 5);
-            }
-        }
-
-        // 防禦塔物件
-        class Tower {
-            constructor(x, y, type) {
-                this.x = x;
-                this.y = y;
-                this.type = type; // 'melee' 或 'ranged' 或 'combo'
-                this.range = type === 'ranged' ? 140 : 90;
-                this.damage = type === 'ranged' ? 18 : 12;
-                this.cooldown = 0;
-                this.maxCooldown = type === 'ranged' ? 45 : 30;
-            }
-
-            update() {
-                if (this.cooldown > 0) this.cooldown--;
-
-                // 尋找範圍內第一個敵人
-                let target = null;
-                for (let e of enemies) {
-                    if (Math.hypot(e.x - this.x, e.y - this.y) <= this.range) {
-                        target = e;
-                        break;
-                    }
-                }
-
-                if (target && this.cooldown === 0) {
-                    bullets.push({
-                        x: this.x,
-                        y: this.y,
-                        target: target,
-                        speed: 6,
-                        damage: this.damage
-                    });
-                    this.cooldown = this.maxCooldown;
-                }
-            }
-
-            draw() {
-                ctx.fillStyle = this.type === 'ranged' ? '#a855f7' : (this.type === 'combo' ? '#f59e0b' : '#3b82f6');
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 18, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                ctx.fillStyle = '#fff';
-                ctx.font = '10px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(this.type === 'ranged' ? '法' : (this.type === 'combo' ? '超' : '戰'), this.x, this.y + 4);
-            }
-        }
-
-        // 選擇防禦塔類型
-        function selectTower(type) {
-            selectedTowerType = type;
-            alert(`已選擇：${type === 'melee' ? '語靈騎士 (50G)' : '元素法師 (75G)'}，請點擊地圖上的空格放置！`);
-        }
-
-        // 點擊地圖放置防禦塔
-        canvas.addEventListener('click', (e) => {
-            if (gameState !== 'PLAYING' || !selectedTowerType) return;
-
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            for (let slot of buildSlots) {
-                if (!slot.occupied && Math.hypot(slot.x - mouseX, slot.y - mouseY) < 25) {
-                    let cost = selectedTowerType === 'ranged' ? 75 : 50;
-                    if (gold >= cost) {
-                        gold -= cost;
-                        towers.push(new Tower(slot.x, slot.y, selectedTowerType));
-                        slot.occupied = true;
-                        selectedTowerType = null;
-                        updateUI();
-                    } else {
-                        alert('金幣不足！');
-                    }
-                    break;
-                }
-            }
-        });
-
-        // Combo 隨機召喚機制
-        function triggerComboSummon() {
-            if (gold < 100) {
-                alert('金幣不足 100G，無法發動 Combo 召喚！');
-                return;
-            }
-            gold -= 100;
-            
-            // 隨機尋找一個空格
-            let emptySlots = buildSlots.filter(s => !s.occupied);
-            if (emptySlots.length === 0) {
-                alert('沒有多餘的塔位可以召喚超級小兵了！');
-                gold += 100;
-                return;
-            }
-
-            let slot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
-            slot.occupied = true;
-            
-            // 隨機抽到強力或奇特的超級兵種（有得必有失的隨機性）
-            let comboTypes = ['combo_giant', 'combo_sniper', 'combo_berserker'];
-            let chosenType = comboTypes[Math.floor(Math.random() * comboTypes.length)];
-            
-            towers.push(new Tower(slot.x, slot.y, 'combo'));
-            updateUI();
-            alert('🎲 Combo 雙牌連線成功！隨機召喚出強力超級語靈！');
-        }
-
-        function updateUI() {
-            document.getElementById('hp-display').innerText = hp;
-            document.getElementById('gold-display').innerText = gold;
-            document.getElementById('wave-display').innerText = `${wave} / ${maxWaves}`;
-        }
-
-        // 遊戲主迴圈
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 1. 繪製地圖路線
-            ctx.strokeStyle = '#334155';
-            ctx.lineWidth = 32;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            ctx.moveTo(path[0].x, path[0].y);
-            for (let p of path) ctx.lineTo(p.x, p.y);
-            ctx.stroke();
-
-            // 2. 繪製防禦塔空格
-            for (let slot of buildSlots) {
-                ctx.fillStyle = slot.occupied ? '#1e293b' : '#334155';
-                ctx.beginPath();
-                ctx.arc(slot.x, slot.y, 18, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = slot.occupied ? '#475569' : '#64748b';
-                ctx.stroke();
-            }
-
-            // 3. 更新與繪製敵人
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                let reachedEnd = enemies[i].update();
-                if (reachedEnd) {
-                    enemies.splice(i, 1);
-                    hp--;
-                    updateUI();
-                    if (hp <= 0) {
-                        endGame(false);
-                    }
-                } else {
-                    enemies[i].draw();
-                }
-            }
-
-            // 4. 更新與繪製防禦塔
-            for (let t of towers) {
-                t.update();
-                t.draw();
-            }
-
-            // 5. 更新與繪製子彈
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                let b = bullets[i];
-                let dx = b.target.x - b.x;
-                let dy = b.target.y - b.y;
-                let dist = Math.hypot(dx, dy);
-
-                if (dist < b.speed || !enemies.includes(b.target)) {
-                    if (enemies.includes(b.target)) {
-                        b.target.health -= b.damage;
-                        if (b.target.health <= 0) {
-                            let index = enemies.indexOf(b.target);
-                            if (index > -1) {
-                                enemies.splice(index, 1);
-                                gold += 25; // 擊殺獎勵
-                                updateUI();
-                            }
-                        }
-                    }
-                    bullets.splice(i, 1);
-                } else {
-                    b.x += (dx / dist) * b.speed;
-                    b.y += (dy / dist) * b.speed;
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.beginPath();
-                    ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-
-            // 檢查波次是否清空
-            if (gameState === 'PLAYING' && enemies.length === 0) {
-                if (wave < maxWaves) {
-                    wave++;
-                    gold += 50; // 波次獎勵
-                    updateUI();
-                    startWave();
-                } else {
-                    endGame(true);
-                }
-            }
-
-            if (gameState === 'PLAYING') {
-                requestAnimationFrame(gameLoop);
-            }
-        }
-
-        function startWave() {
-            let enemyCount = 3 + wave * 2;
-            let spawned = 0;
-            let interval = setInterval(() => {
-                if (spawned < enemyCount && gameState === 'PLAYING') {
-                    enemies.push(new Enemy(wave));
-                    spawned++;
-                } else {
-                    clearInterval(interval);
-                }
-            }, 1200);
-        }
-
-        document.getElementById('start-btn').addEventListener('click', () => {
-            document.getElementById('overlay-screen').classList.add('hidden');
-            gameState = 'PLAYING';
-            hp = 20;
-            gold = 150;
-            wave = 1;
-            towers = [];
-            enemies = [];
-            bullets = [];
-            // 重置塔位
-            buildSlots.forEach(s => s.occupied = false);
-            updateUI();
-            startWave();
-            gameLoop();
-        });
-
-        function endGame(isWin) {
-            gameState = isWin ? 'WIN' : 'GAMEOVER';
-            const overlay = document.getElementById('overlay-screen');
-            const title = document.getElementById('overlay-title');
-            const desc = document.getElementById('overlay-desc');
-            const btn = document.getElementById('start-btn');
-
-            overlay.classList.remove('hidden');
-            if (isWin) {
-                title.innerText = "🎉 勝利！語靈防線守住了！";
-                desc.innerText = "你成功抵禦了所有怪獸的進攻，展現了極佳的塔防與代價平衡策略！";
-            } else {
-                title.innerText = "💀 防線崩潰...";
-                desc.innerText = "怪獸突破了你的語靈陣線，再試一次，調整你的英雄與 Combo 策略吧！";
-            }
-            btn.innerText = "重新挑戰";
-        }
-    </script>
-</body>
-</html>
+                ctx.fillRect(this.x - 14, this.y - 20, 28 * (this.health / this.maxHealth
