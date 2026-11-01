@@ -3,29 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>語靈陣線 Lingo Frontline</title>
+    <title>語靈陣線 Lingo Frontline - 旗艦版</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
+        <!-- 頂部資訊列 -->
         <header id="ui-header">
             <div class="stat-box">🏰 主城血量: <span id="castle-hp">1000</span></div>
             <div class="stat-box">⚡ 能量 MP: <span id="player-mp">10</span>/10</div>
             <div class="stat-box">🌊 當前波次: Wave <span id="current-wave">1</span></div>
         </header>
+
+        <!-- 遊戲主戰場 -->
         <main id="battlefield">
             <div id="castle-base">🛡️ 基地</div>
-            <div id="spawn-lane"></div>
+            <div id="spawn-lane">
+                <!-- 敵怪動態出現位置 -->
+            </div>
         </main>
+
+        <!-- 語音辨識狀態指示器 -->
         <div id="voice-status">
-            🎤 麥克風狀態: <span id="mic-state">點擊「啟動麥克風」準備開口</span>
+            🎤 麥克風狀態: <span id="mic-state">點擊「啟動語音辨識」準備開口唸出卡牌單字</span>
             <button id="mic-btn">🎙️ 啟動語音辨識</button>
         </div>
+
+        <!-- 底部 5 張隨機手牌區 -->
+        <header style="text-align: center; font-weight: bold; color: #ff6b6b; margin-bottom: 5px;">
+            🃏 點擊下方手牌發射攻擊，支援麥克風語音詠唱！
+        </header>
         <footer id="hand-container">
-            <h3>手牌區 (點擊或語音發射)</h3>
-            <div id="cards-grid"></div>
+            <div id="cards-grid">
+                <!-- 動態生成 5 張手牌 -->
+            </div>
         </footer>
     </div>
+
     <script src="game.js"></script>
+</body>
+</html>
 </body>
 </html>
