@@ -2,24 +2,26 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>語靈陣線 Lingo Frontline - Cyber Edition</title>
+    <title>語靈陣線：宇宙星際防線 (Cosmic Lingo Frontline)</title>
     <style>
         :root {
-            --bg-color: #050811;
-            --panel-bg: rgba(13, 18, 30, 0.92);
-            --neon-cyan: #00ffcc;
+            --bg-deep: #02040a;
+            --panel-bg: rgba(10, 15, 30, 0.9);
+            --neon-cyan: #00f3ff;
             --neon-pink: #ff0055;
-            --neon-gold: #ffcc00;
+            --neon-gold: #ffd700;
+            --neon-purple: #9d00ff;
             --text-main: #f0f6fc;
         }
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-deep);
             color: var(--text-main);
             font-family: 'Courier New', Courier, monospace;
             text-align: center;
             margin: 0;
             padding: 10px;
             overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #0d1b2a 0%, #02040a 100%);
         }
         header h1 {
             margin: 5px 0;
@@ -40,20 +42,20 @@
             border: 1px solid var(--neon-cyan);
             padding: 6px 16px;
             border-radius: 6px;
-            box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.3);
         }
         .game-container {
             position: relative;
             width: 800px;
             margin: 0 auto;
-            border: 2px solid var(--neon-pink);
-            box-shadow: 0 0 30px rgba(255, 0, 85, 0.5);
-            background: #0b0f19;
-            border-radius: 6px;
+            border: 2px solid var(--neon-cyan);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
+            background: #050814;
+            border-radius: 8px;
         }
         canvas {
             display: block;
-            background: linear-gradient(90deg, #0d121f 0%, #080b14 100%);
+            background: linear-gradient(90deg, #070d1d 0%, #02040a 100%);
         }
         .control-panel {
             width: 800px;
@@ -61,26 +63,27 @@
             background: var(--panel-bg);
             border: 1px solid var(--neon-gold);
             padding: 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             box-sizing: border-box;
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.2);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
         }
         .cards-flex {
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
             margin-bottom: 10px;
         }
         .card {
-            background: #151d30;
+            background: #0d1b2a;
             border: 2px solid var(--neon-cyan);
-            padding: 8px 16px;
+            padding: 8px 12px;
             border-radius: 6px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: var(--neon-cyan);
             cursor: pointer;
             transition: all 0.2s;
             user-select: none;
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.2);
         }
         .card:hover {
             background: var(--neon-cyan);
@@ -90,7 +93,7 @@
         }
         .card.selected {
             border-color: var(--neon-gold);
-            background: #3d341f;
+            background: #2a220d;
             color: var(--neon-gold);
             box-shadow: 0 0 20px var(--neon-gold);
         }
@@ -118,7 +121,7 @@
             color: #000;
         }
         select {
-            background: #151d30;
+            background: #0d1b2a;
             color: #fff;
             border: 1px solid var(--neon-gold);
             padding: 6px;
@@ -143,13 +146,13 @@
 <body>
 
     <header>
-        <h1>《語靈陣線》LINGO FRONTLINE</h1>
+        <h1>🌌 語靈陣線：宇宙防線 🌌</h1>
     </header>
 
     <div class="dashboard">
-        <div class="stat-box">🏰 主城防禦: <span id="base-hp" style="color:var(--neon-pink);">100</span>/100</div>
-        <div class="stat-box">⚡ 戰術 MP: <span id="mp-val" style="color:var(--neon-cyan);">10</span>/10</div>
-        <div class="stat-box">🌊 戰鬥波次: <span id="wave-val" style="color:var(--neon-gold);">Wave 1</span></div>
+        <div class="stat-box">🛸 艦隊穹頂防護: <span id="base-hp" style="color:var(--neon-pink);">1000</span>/1000</div>
+        <div class="stat-box">⚡ 戰術能量 MP: <span id="mp-val" style="color:var(--neon-cyan);">10</span>/10</div>
+        <div class="stat-box">🌠 星際波次: <span id="wave-val" style="color:var(--neon-gold);">Sector 1</span></div>
     </div>
 
     <div class="game-container">
@@ -158,22 +161,23 @@
 
     <div class="control-panel">
         <div style="margin-bottom: 8px; font-size: 0.85rem; color: #aaa;">
-            🌍 語言學習模式設定：
+            🌐 星際語系終端機設定：
             <select id="lang-select" onchange="changeLanguageMode()">
-                <option value="en">英語 (English - Advanced Tactic)</option>
-                <option value="ja">日本語 (Japanese - JLPT N3/N2)</option>
-                <option value="es">Español (Spanish - Phonetic)</option>
+                <option value="en">English (Cosmic Terms)</option>
+                <option value="ja">日本語 (宇宙・天体)</option>
+                <option value="es">Español (Espacio Estelar)</option>
+                <option value="zh">中文 (星際天文詞彙)</option>
             </select>
         </div>
 
-        <div id="combo-display">🔥 雙卡 Combo 槽位: 請點擊兩張手牌進行屬性融合 (已選 0/2)</div>
+        <div id="combo-display">🔥 雙卡星際 Combo 槽位: 點擊 2 張手牌進行元素躍遷融合 (已選 0/2)</div>
         <div class="cards-flex" id="hand-container"></div>
 
         <div class="action-bar">
-            <button class="primary-btn" onclick="startVoiceRecognition()">🎙️ 啟動戰術語音吟詠</button>
-            <span id="mic-status" style="font-size: 0.85rem; color: var(--neon-gold);">等待語音指令...</span>
+            <button class="primary-btn" onclick="startVoiceRecognition()">🎙️ 啟動深空語音詠唱</button>
+            <span id="mic-status" style="font-size: 0.85rem; color: var(--neon-gold);">等待艦長語音指令...</span>
         </div>
-        <div id="combat-log">系統就緒：選定 2 張元素卡牌並唸出敵方目標單字發動特效打擊！</div>
+        <div id="combat-log">戰情室就緒：選定 2 張星際卡牌，並對著宇宙怪獸頭頂的單字發動聲波攻擊！</div>
     </div>
 
     <script>
@@ -181,44 +185,58 @@
         const ctx = canvas.getContext("2d");
 
         let gameState = {
-            baseHp: 100,
+            baseHp: 1000,
             mp: 10,
             maxMp: 10,
             wave: 1,
             currentLang: 'en'
         };
 
+        // 四國語系：宇宙怪獸與天文題庫
         const vocabDatabases = {
             en: [
-                { word: "Frost", meaning: "冰霜" },
-                { word: "Ignite", meaning: "點燃" },
-                { word: "Thunder", meaning: "雷霆" },
-                { word: "Shadow", meaning: "暗影" }
+                { word: "Orbit", meaning: "軌道", element: "water" },
+                { word: "Meteor", meaning: "流星", element: "fire" },
+                { word: "Gravity", meaning: "重力", element: "earth" },
+                { word: "Nebula", meaning: "星雲", element: "light" },
+                { word: "Eclipse", meaning: "蝕", element: "dark" },
+                { word: "Pulsar", meaning: "脈衝星", element: "thunder" }
             ],
             ja: [
-                { word: "Kōri", meaning: "氷 (冰)" },
-                { word: "Honō", meaning: "炎 (火)" },
-                { word: "Inazuma", meaning: "稲妻 (雷)" },
-                { word: "Kage", meaning: "影 (暗)" }
+                { word: "Kousei", meaning: "恒星", element: "fire" },
+                { word: "Inryoku", meaning: "引力", element: "earth" },
+                { word: "Wakusei", meaning: "惑星", element: "water" },
+                { word: "Kokū", meaning: "虚空", element: "dark" },
+                { word: "Ryūsei", meaning: "流星", element: "thunder" }
             ],
             es: [
-                { word: "Fuego", meaning: "火" },
-                { word: "Hielo", meaning: "冰" },
-                { word: "Rayo", meaning: "雷" },
-                { word: "Sombra", meaning: "影" }
+                { word: "Galaxia", meaning: "銀河", element: "light" },
+                { word: "Cometa", meaning: "彗星", element: "water" },
+                { word: "Gravedad", meaning: "重力", element: "earth" },
+                { word: "Vacío", meaning: "虛空", element: "dark" },
+                { word: "Eclipse", meaning: "日/月食", element: "fire" }
+            ],
+            zh: [
+                { word: "星雲", meaning: "Nebula", element: "light" },
+                { word: "黑洞", meaning: "Black Hole", element: "dark" },
+                { word: "超新星", meaning: "Supernova", element: "fire" },
+                { word: "磁場", meaning: "Magnetic Field", element: "thunder" },
+                { word: "軌道", meaning: "Orbit", element: "water" }
             ]
         };
 
+        // 宇宙風手牌
         let playerHand = [
-            { id: 1, name: "元素·水 (Water)", element: "water", cost: 2 },
-            { id: 2, name: "元素·火 (Fire)", element: "fire", cost: 2 },
-            { id: 3, name: "元素·雷 (Thunder)", element: "thunder", cost: 3 },
-            { id: 4, name: "元素·風 (Wind)", element: "wind", cost: 2 }
+            { id: 1, name: "星力·水 (Orbit)", element: "water", cost: 2 },
+            { id: 2, name: "星力·火 (Meteor)", element: "fire", cost: 2 },
+            { id: 3, name: "星力·雷 (Pulsar)", element: "thunder", cost: 3 },
+            { id: 4, name: "星力·地 (Gravity)", element: "earth", cost: 2 },
+            { id: 5, name: "星力·光 (Nebula)", element: "light", cost: 2 }
         ];
 
         let selectedCards = [];
         let enemies = [];
-        let particles = []; // 擊殺爆炸粒子特效
+        let particles = [];
 
         function initHand() {
             const container = document.getElementById("hand-container");
@@ -243,7 +261,7 @@
                     selectedCards.push(card);
                     elementNode.classList.add("selected");
                 } else {
-                    document.getElementById("combat-log").innerText = "⚠️ 最多只能選擇 2 張元素卡牌！";
+                    document.getElementById("combat-log").innerText = "⚠️ 戰術槽已滿：最多只能選擇 2 張星際卡牌！";
                     return;
                 }
             }
@@ -252,19 +270,20 @@
 
         function updateComboStatus() {
             if (selectedCards.length === 2) {
-                let comboName = getComboEffect(selectedCards[0].element, selectedCards[1].element);
-                document.getElementById("combo-display").innerText = `⚡ 完美融合就緒！【${comboName}】 ➔ 準備語音吟詠！`;
+                let comboName = getCosmicCombo(selectedCards[0].element, selectedCards[1].element);
+                document.getElementById("combo-display").innerText = `⚡ 躍遷融合就緒！【${comboName}】 ➔ 準備聲波詠唱！`;
             } else {
-                document.getElementById("combo-display").innerText = `🔥 雙卡 Combo 槽位: 已選 ${selectedCards.length}/2 張`;
+                document.getElementById("combo-display").innerText = `🔥 雙卡星際 Combo 槽位: 已選 ${selectedCards.length}/2 張`;
             }
         }
 
-        function getComboEffect(el1, el2) {
+        function getCosmicCombo(el1, el2) {
             let pair = [el1, el2].sort().join("+");
-            if (pair === "fire+water") return "蒸氣爆破 (Steam Blast)";
-            if (pair === "thunder+water") return "高壓感電 (Electro-Shock)";
-            if (pair === "fire+thunder") return "超載熔斷 (Overload Fusion)";
-            return "元素共鳴 (Resonance)";
+            if (pair === "fire+water") return "超新星蒸發流 (Supernova Vapor)";
+            if (pair === "earth+fire") return "熔岩軌道轰击 (Magma Bombardment)";
+            if (pair === "light+water") return "星塵極光陣 (Stardust Aurora)";
+            if (pair === "dark+fire") return "暗黑黑洞引爆 (Singularity Blast)";
+            return "深空元素躍遷 (Warp Resonance)";
         }
 
         function spawnEnemy() {
@@ -273,175 +292,35 @@
             const lanes = [80, 200, 320];
             const targetY = lanes[Math.floor(Math.random() * lanes.length)];
 
+            // 依據危險分級決定外觀與血量
+            let tier = Math.random();
+            let hp = 100, radius = 18, color = "#ff0055";
+            let typeName = "星塵獸";
+
+            if (tier > 0.7) {
+                hp = 220; radius = 24; color = "#9d00ff"; typeName = "超新星霸主"; // 菁英/霸主級
+            } else if (tier > 0.4) {
+                hp = 150; radius = 20; color = "#ffaa00"; typeName = "星体獸";
+            }
+
             enemies.push({
                 x: 820,
                 y: targetY,
-                radius: 20,
-                speed: 0.5, // 調整速度讓玩家有充裕時間反應
+                radius: radius,
+                speed: 0.45 + (gameState.wave * 0.03),
                 targetWord: randomVocab.word,
                 meaning: randomVocab.meaning,
-                hp: 100,
-                maxHp: 100
+                hp: hp,
+                maxHp: hp,
+                color: color,
+                typeName: typeName
             });
         }
 
-        function createExplosion(x, y) {
-            for (let i = 0; i < 25; i++) {
+        function createWarpExplosion(x, y) {
+            for (let i = 0; i < 30; i++) {
                 particles.push({
                     x: x,
                     y: y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    radius: Math.random() * 4 + 2,
-                    color: Math.random() > 0.5 ? '#00ffcc' : '#ff0055',
-                    life: 40
-                });
-            }
-        }
-
-        function changeLanguageMode() {
-            gameState.currentLang = document.getElementById("lang-select").value;
-            enemies.forEach(e => {
-                const db = vocabDatabases[gameState.currentLang];
-                const rv = db[Math.floor(Math.random() * db.length)];
-                e.targetWord = rv.word;
-                e.meaning = rv.meaning;
-            });
-        }
-
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 繪製科技跑道格線
-            ctx.strokeStyle = "rgba(0, 255, 204, 0.12)";
-            ctx.lineWidth = 1.5;
-            for (let i = 1; i <= 3; i++) {
-                ctx.beginPath();
-                ctx.moveTo(0, i * 100);
-                ctx.lineTo(800, i * 100);
-                ctx.stroke();
-            }
-
-            // 繪製防守主城
-            ctx.fillStyle = "#00ffcc";
-            ctx.fillRect(20, 40, 15, 320);
-            ctx.fillStyle = "#fff";
-            ctx.font = "bold 10px monospace";
-            ctx.fillText("BASE", 12, 200);
-
-            // 繪製爆炸粒子
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life--;
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
-                if (p.life <= 0) particles.splice(i, 1);
-            }
-
-            // 更新與繪製怪獸
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                let en = enemies[i];
-                en.x -= en.speed;
-
-                // 繪製賽博風格幾何敵人
-                ctx.fillStyle = "#ff0055";
-                ctx.beginPath();
-                ctx.arc(en.x, en.y, en.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = "#00ffcc";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // 頭頂字體
-                ctx.fillStyle = "#ffcc00";
-                ctx.font = "bold 12px monospace";
-                ctx.fillText(`Target: ${en.targetWord} (${en.meaning})`, en.x - 55, en.y - 28);
-
-                // 血條
-                ctx.fillStyle = "#222";
-                ctx.fillRect(en.x - 22, en.y + 24, 44, 6);
-                ctx.fillStyle = "#00ffcc";
-                let hpBarWidth = (en.hp / en.maxHp) * 44;
-                ctx.fillRect(en.x - 22, en.y + 24, Math.max(0, hpBarWidth), 6);
-
-                if (en.x <= 40) {
-                    gameState.baseHp -= 10;
-                    document.getElementById("base-hp").innerText = Math.max(0, gameState.baseHp);
-                    createExplosion(en.x, en.y);
-                    enemies.splice(i, 1);
-                    if (gameState.baseHp <= 0) {
-                        alert("⚠️ 防線崩潰！主城陷落，重置戰局。");
-                        gameState.baseHp = 100;
-                        enemies = [];
-                    }
-                }
-            }
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        function startVoiceRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("請使用 Google Chrome 瀏覽器以支援語音辨識！");
-                return;
-            }
-
-            const recognition = new SpeechRecognition();
-            recognition.lang = gameState.currentLang === 'ja' ? 'ja-JP' : (gameState.currentLang === 'es' ? 'es-ES' : 'en-US');
-            recognition.start();
-
-            document.getElementById("mic-status").innerText = "🔴 聆聽中... 請清晰唸出目標單字";
-
-            recognition.onresult = function(event) {
-                const said = event.results[0][0].transcript.trim();
-                document.getElementById("mic-status").innerText = `🎙️ 辨識結果: "${said}"`;
-
-                let damage = 50;
-                let bonusMsg = "";
-                if (selectedCards.length === 2) {
-                    damage = 100;
-                    bonusMsg = " 🌟 Combo 暴擊！";
-                    selectedCards = [];
-                    initHand();
-                    updateComboStatus();
-                }
-
-                let hitFound = false;
-                for (let i = 0; i < enemies.length; i++) {
-                    if (said.toLowerCase().includes(enemies[i].targetWord.toLowerCase())) {
-                        enemies[i].hp -= damage;
-                        hitFound = true;
-                        document.getElementById("combat-log").innerText = `⚡ 命中 【${enemies[i].targetWord}】！造成 ${damage} 傷害${bonusMsg}`;
-                        
-                        if (enemies[i].hp <= 0) {
-                            createExplosion(enemies[i].x, enemies[i].y);
-                            enemies.splice(i, 1);
-                            gameState.mp = Math.min(10, gameState.mp + 3);
-                            document.getElementById("mp-val").innerText = gameState.mp;
-                        }
-                        break;
-                    }
-                }
-
-                if (!hitFound) {
-                    document.getElementById("combat-log").innerText = `❌ 未命中目標（你唸了: ${said}）`;
-                }
-            };
-        }
-
-        setInterval(() => {
-            if (enemies.length < 4) {
-                spawnEnemy();
-            }
-        }, 5000);
-
-        initHand();
-        gameLoop();
-    </script>
-</body>
-</html>
+                    vx: (Math.random() - 0.5) * 8,
+                    
