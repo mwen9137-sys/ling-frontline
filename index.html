@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>語靈陣線 Lingo Frontline</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header id="ui-header">
+            <div class="stat-box">🏰 主城血量: <span id="castle-hp">1000</span></div>
+            <div class="stat-box">⚡ 能量 MP: <span id="player-mp">10</span>/10</div>
+            <div class="stat-box">🌊 當前波次: Wave <span id="current-wave">1</span></div>
+        </header>
+        <main id="battlefield">
+            <div id="castle-base">🛡️ 基地</div>
+            <div id="spawn-lane"></div>
+        </main>
+        <div id="voice-status">
+            🎤 麥克風狀態: <span id="mic-state">點擊「啟動麥克風」準備開口</span>
+            <button id="mic-btn">🎙️ 啟動語音辨識</button>
+        </div>
+        <footer id="hand-container">
+            <h3>手牌區 (點擊或語音發射)</h3>
+            <div id="cards-grid"></div>
+        </footer>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
