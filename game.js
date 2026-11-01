@@ -7,15 +7,15 @@ let gold = 120;
 let wave = 1;
 let maxWaves = 5;
 let selectedSummonType = null;
+let animationFrameCount = 0; // 用於計算動態動畫循環
 
-// 擴充後的語言題庫（對應你的語言學習核心）
+// 豐富的語言題庫（核心學習驅動）
 const quizList = [
     { q: "請選出英文「Trade-off (代價平衡)」的正確含意：", options: ["有得必有失的取捨", "無條件的贈送", "絕對的勝利", "完全的放棄"], answer: 0 },
     { q: "法語「C'est la vie」的意思是？", options: ["這就是人生", "早安", "謝謝", "再見"], answer: 0 },
     { q: "日語「一期一會」強調的是？", options: ["珍視當下的相遇", "永恆不變", "無限循環", "戰鬥勝利"], answer: 0 },
     { q: "英文「Strategic (戰略性的)」的反義詞較接近？", options: ["隨機盲目的", "深思熟慮的", "精準的", "計畫性的"], answer: 0 },
-    { q: "西班牙語「Amigo」中文是？", options: ["朋友", "敵人", "陌生人", "戰士"], answer: 0 },
-    { q: "德語「Wunderbar」的意思是？", options: ["奇妙的/棒極了", "危險的", "緩慢的", "困難的"], answer: 0 }
+    { q: "西班牙語「Amigo」中文是？", options: ["朋友", "敵人", "陌生人", "戰士"], answer: 0 }
 ];
 let currentQuizIndex = 0;
 
@@ -31,37 +31,56 @@ const defenseSlots = [
 let units = [];
 let enemies = [];
 let projectiles = [];
+let particles = []; // 粒子特效陣列（讓打擊感大增）
 
+// 帶有動畫效果的怪獸類別
 class Enemy {
     constructor(waveMultiplier) {
         this.x = 0;
         this.y = 190;
-        this.speed = 1.1 + waveMultiplier * 0.15;
+        this.speed = 1.0 + waveMultiplier * 0.15;
         this.maxHealth = 40 + waveMultiplier * 25;
         this.health = this.maxHealth;
-        this.radius = 12;
+        this.radius = 14;
+        this.walkCycle = Math.random() * 100; // 獨立的走路動畫步態
     }
     update() {
         this.x += this.speed;
+        this.walkCycle += 0.15; // 累加速度驅動上下起伏動畫
         if (this.x >= 600) return true;
         return false;
     }
     draw() {
+        ctx.save();
+        // 模擬走路時上下彈跳的動態感
+        let bounce = Math.sin(this.walkCycle) * 4;
+        
+        // 怪獸本體外觀
         ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y + bounce, this.radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#991b1b';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#7f1d1d';
+        ctx.lineWidth = 3;
         ctx.stroke();
 
+        // 動態眼睛（盯著前方）
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(this.x + 4, this.y + bounce - 3, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 血條
         ctx.fillStyle = '#000';
-        ctx.fillRect(this.x - 14, this.y - 20, 28, 4);
+        ctx.fillRect(this.x - 16, this.y + bounce - 24, 32, 5);
         ctx.fillStyle = '#22c55e';
-        ctx.fillRect(this.x - 14, this.y - 20, 28 * (this.health / this.maxHealth), 4);
+        ctx.fillRect(this.x - 16, this.y + bounce - 24, 32 * (this.health / this.maxHealth), 5);
+        
+        ctx.restore();
     }
 }
 
+// 帶有動態攻擊與呼吸特效的防禦單位類別
 class DefenderUnit {
     constructor(x, y, type) {
         this.x = x;
@@ -71,9 +90,12 @@ class DefenderUnit {
         this.damage = type === 'ranged' ? 18 : (type === 'combo' ? 32 : 12);
         this.cooldown = 0;
         this.maxCooldown = type === 'ranged' ? 45 : (type === 'combo' ? 28 : 35);
+        this.attackAnimTimer = 0; // 攻擊時的後座力動畫計時器
     }
     update() {
         if (this.cooldown > 0) this.cooldown--;
+        if (this.attackAnimTimer > 0) this.attackAnimTimer--;
+
         let target = null;
         for (let e of enemies) {
             if (Math.hypot(e.x - this.x, e.y - this.y) <= this.range) {
@@ -82,28 +104,50 @@ class DefenderUnit {
             }
         }
         if (target && this.cooldown === 0) {
-            projectiles.push({ x: this.x, y: this.y, target: target, speed: 6, damage: this.damage });
+            projectiles.push({ x: this.x, y: this.y, target: target, speed: 7, damage: this.damage, type: this.type });
             this.cooldown = this.maxCooldown;
+            this.attackAnimTimer = 12; // 觸發攻擊微調動畫
         }
     }
     draw() {
+        ctx.save();
         let color = '#3b82f6';
         let label = '戰';
         if (this.type === 'ranged') { color = '#a855f7'; label = '法'; }
         if (this.type === 'combo') { color = '#f59e0b'; label = '超'; }
 
+        // 呼吸燈效果（微小的縮放動畫）
+        let pulse = Math.sin(animationFrameCount * 0.08) * 2;
+        let recoil = this.attackAnimTimer > 0 ? 3 : 0; // 攻擊時產生的後座力位移
+
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 16, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y - recoil, 16 + pulse * 0.5, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
 
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 10px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(label, this.x, this.y + 3);
+        ctx.fillText(label, this.x, this.y - recoil + 4);
+        ctx.restore();
+    }
+}
+
+// 產生華麗的爆炸與擊打粒子特效
+function createParticles(x, y, color) {
+    for (let i = 0; i < 8; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5,
+            alpha: 1.0,
+            color: color,
+            radius: Math.random() * 3 + 1
+        });
     }
 }
 
@@ -165,6 +209,7 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
+// 代價平衡：雙牌 Combo 隨機超級召喚
 function triggerComboSummon() {
     if (gold < 100) {
         alert('金幣不足 100G，無法發動雙牌 Combo 召喚！');
@@ -190,9 +235,12 @@ function updateUI() {
     document.getElementById('wave-display').innerText = `${wave} / ${maxWaves}`;
 }
 
+// 動態遊戲主迴圈（每秒 60 次流暢動畫演算）
 function gameLoop() {
+    animationFrameCount++;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // 繪製戰場背景與捲軸路徑
     ctx.strokeStyle = '#1e293b';
     ctx.lineWidth = 32;
     ctx.lineCap = 'round';
@@ -201,6 +249,7 @@ function gameLoop() {
     for (let p of path) ctx.lineTo(p.x, p.y);
     ctx.stroke();
 
+    // 繪製陣地格子
     for (let slot of defenseSlots) {
         ctx.fillStyle = slot.occupied ? '#1e293b' : '#334155';
         ctx.beginPath();
@@ -210,6 +259,7 @@ function gameLoop() {
         ctx.stroke();
     }
 
+    // 更新與繪製敵人動畫
     for (let i = enemies.length - 1; i >= 0; i--) {
         let breakthrough = enemies[i].update();
         if (breakthrough) {
@@ -222,11 +272,13 @@ function gameLoop() {
         }
     }
 
+    // 更新與繪製防禦單位動畫
     for (let u of units) {
         u.update();
         u.draw();
     }
 
+    // 更新與繪製攻擊彈道
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
         let dx = p.target.x - p.x;
@@ -235,6 +287,7 @@ function gameLoop() {
         if (dist < p.speed || !enemies.includes(p.target)) {
             if (enemies.includes(p.target)) {
                 p.target.health -= p.damage;
+                createParticles(p.target.x, p.target.y, p.type === 'ranged' ? '#c084fc' : '#60a5fa');
                 if (p.target.health <= 0) {
                     let idx = enemies.indexOf(p.target);
                     if (idx > -1) {
@@ -248,10 +301,29 @@ function gameLoop() {
         } else {
             p.x += (dx / dist) * p.speed;
             p.y += (dy / dist) * p.speed;
-            ctx.fillStyle = '#fbbf24';
+            ctx.fillStyle = p.type === 'ranged' ? '#c084fc' : '#fbbf24';
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
             ctx.fill();
+        }
+    }
+
+    // 更新與繪製打擊特效粒子
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let pt = particles[i];
+        pt.x += pt.vx;
+        pt.y += pt.vy;
+        pt.alpha -= 0.04;
+        if (pt.alpha <= 0) {
+            particles.splice(i, 1);
+        } else {
+            ctx.save();
+            ctx.globalAlpha = pt.alpha;
+            ctx.fillStyle = pt.color;
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
         }
     }
 
@@ -293,6 +365,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
     units = [];
     enemies = [];
     projectiles = [];
+    particles = [];
     defenseSlots.forEach(s => s.occupied = false);
     updateUI();
     loadQuiz();
