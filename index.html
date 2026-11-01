@@ -1,47 +1,130 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>語靈陣線 Lingo Frontline - 旗艦版</title>
-    <link rel="stylesheet" href="style.css">
+    <title>語靈陣線 Lingo Frontline</title>
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: #fff;
+            font-family: monospace;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        canvas {
+            border: 2px solid #00ffcc;
+            background: #111;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+            margin: 0 auto;
+            display: block;
+        }
+        #ui-panel {
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #ff0055;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #00ffcc;
+            color: #000;
+        }
+    </style>
 </head>
 <body>
-    <div id="game-container">
-        <!-- 頂部資訊列 -->
-        <header id="ui-header">
-            <div class="stat-box">🏰 主城血量: <span id="castle-hp">1000</span></div>
-            <div class="stat-box">⚡ 能量 MP: <span id="player-mp">10</span>/10</div>
-            <div class="stat-box">🌊 當前波次: Wave <span id="current-wave">1</span></div>
-        </header>
 
-        <!-- 遊戲主戰場 -->
-        <main id="battlefield">
-            <div id="castle-base">🛡️ 基地</div>
-            <div id="spawn-lane">
-                <!-- 敵怪動態出現位置 -->
-            </div>
-        </main>
+    <h1>《語靈陣線》技術原型 v0.1</h1>
+    <p>MP 能量: <span id="mp-display">10</span>/10 | 波次: Wave 1</p>
 
-        <!-- 語音辨識狀態指示器 -->
-        <div id="voice-status">
-            🎤 麥克風狀態: <span id="mic-state">點擊「啟動語音辨識」準備開口唸出卡牌單字</span>
-            <button id="mic-btn">🎙️ 啟動語音辨識</button>
-        </div>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
 
-        <!-- 底部 5 張隨機手牌區 -->
-        <header style="text-align: center; font-weight: bold; color: #ff6b6b; margin-bottom: 5px;">
-            🃏 點擊下方手牌發射攻擊，支援麥克風語音詠唱！
-        </header>
-        <footer id="hand-container">
-            <div id="cards-grid">
-                <!-- 動態生成 5 張手牌 -->
-            </div>
-        </footer>
+    <div id="ui-panel">
+        <p>手牌區 (模擬隨機抽牌): <b id="card-display">[ 水: Cold ]  [ 火: Hot ]  [ 雷: Fast ]</b></p>
+        <button onclick="startVoiceRecognition()">🎙️ 按住/點擊發音唸單字</button>
+        <p id="speech-result" style="color: #00ffcc; margin-top: 5px;"></p>
     </div>
 
-    <script src="game.js"></script>
-</body>
-</html>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let enemy = { x: 750, y: 180, radius: 20, speed: 1, target: "Cold", hp: 100 };
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 2;
+            for (let i = 1; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * 100);
+                ctx.lineTo(800, i * 100);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = "#00ffcc";
+            ctx.fillRect(50, 150, 30, 100);
+
+            if (enemy.hp > 0) {
+                ctx.fillStyle = "#ff0055";
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = "#fff";
+                ctx.font = "14px monospace";
+                ctx.fillText(`Target: ${enemy.target}`, enemy.x - 40, enemy.y - 30);
+                ctx.fillText(`HP: ${enemy.hp}`, enemy.x - 20, enemy.y + 35);
+
+                enemy.x -= enemy.speed;
+                if (enemy.x < 80) {
+                    alert("主城被突破！ Game Over");
+                    enemy.x = 750;
+                    enemy.hp = 100;
+                }
+            }
+
+            requestAnimationFrame(drawGame);
+        }
+
+        function startVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("您的瀏覽器不支援語音辨識，請使用 Chrome！");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.start();
+
+            document.getElementById("speech-result").innerText = "聆聽中... 請大聲唸出 'Cold'";
+
+            recognition.onresult = function(event) {
+                const said = event.results[0][0].transcript.trim();
+                document.getElementById("speech-result").innerText = `你唸了: "${said}"`;
+
+                if (said.toLowerCase().includes(enemy.target.toLowerCase())) {
+                    enemy.hp -= 50;
+                    document.getElementById("speech-result").innerText += " ➔ 命中克制！造成 50 傷害！";
+                    if (enemy.hp <= 0) {
+                        alert("擊殺怪獸！獲得 MP 返還！");
+                        enemy.x = 750;
+                        enemy.hp = 100;
+                    }
+                } else {
+                    document.getElementById("speech-result").innerText += " ➔ 發音不符目標，傷害減半！";
+                }
+            };
+        }
+
+        drawGame();
+    </script>
 </body>
 </html>
